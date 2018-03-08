@@ -3,6 +3,8 @@ const bodyParser = require('koa-bodyparser')
 const koaStatic = require('koa-static')
 const { Pool, Client } = require('pg')
 
+const functions = require('./functions')
+
 const app = new Koa()
 app.use(bodyParser({enableTypes: ['text', 'json']}))
 app.use(koaStatic('./app/'));
@@ -14,7 +16,8 @@ const pool = new Pool({
   password: ''
 })
 
-// TODO: auto-build from DB schema
+// TODO: tool to auto-build from DB schema?
+// but this is user config, like schema.rb
 const types = {
   post: {
     table: 'posts',
@@ -23,7 +26,9 @@ const types = {
   },
   user: {
     table: 'users',
-    writable: ['username', 'password', 'session_token']
+    functions: {
+      update: 'authenticateUser'
+    }
   }
 }
 
@@ -193,6 +198,11 @@ const mapUpdate = (query, type, { isInsert }) => {
 const handleUpdate = async query => {
   try {
     const type = types[query.action]
+
+    if (type.functions && type.functions.update) {
+      console.log('invoke ', type.functions.update, functions)
+      return functions[type.functions.update](pool, query.update)
+    }
 
     const { columns, values } = mapUpdate(query, type, { createdTimestamp: false })
 
