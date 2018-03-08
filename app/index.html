@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.min.js'></script>
+  <script src='./lib.js'></script>
+  <script src='./read.js'></script>
+  <script src='./update.js'></script>
+  <style>
+  * { font-family: sans-serif }
+  </style>
+</head>
+<body>
+  <h1>App</h1>
+  <div id='app'></div>
+</body>
+<template id='App'>
+  <div>
+    <h3>Navigation...</h3>
+    <p>Welcome to Solnet</p>
+
+    <form action='user' method='update'>
+      <input name='username' placeholder='user@gmail.com'>
+      <input type='password' name='password' placeholder='Password'>
+      <button type='submit'>Login</button>
+    </form>
+
+  </div>
+</template>
+<script>
+const App = {
+  template: 'App',
+  mount: 'app'
+}
+
+window.onload = create(App)
+
+</script>
+
+</html>

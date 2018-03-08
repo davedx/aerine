@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.5/lodash.min.js'></script>
+  <script src='./lib.js'></script>
+  <script src='./read.js'></script>
+  <script src='./update.js'></script>
+  <style>
+  * { font-family: sans-serif }
+  </style>
+</head>
+<body>
+  <h1>App</h1>
+  <div id='app'></div>
+</body>
+<template id='Timeline' data='{"posts": {"type": "post", "owner": "authed"}}'>
+  <div>
+    <h1>Timeline</h1>
+
+    <ul>
+      <li t-for="post in posts">
+        {{ post.body }} by {{ post.user.first_name }} {{ post.user.surname }}
+        <button action='post' type='delete'>Delete post</button>
+      </li>
+    </ul>
+
+    <form action='post' method='create'>
+      <h1><u>hi</u></h1>
+      <textarea name='body'></textarea>
+      <button type='submit'>New post</button>
+    </form>
+  </div>
+</template>
+<script>
+// High level TODOs
+// - Friends of current user
+// - Timeline includes posts of current user's friends
+// - Create, update, delete examples, with and without parent relations
+
+const Timeline = {
+  template: 'Timeline', // default?
+  mount: 'app'
+}
+
+window.onload = create(Timeline)
+</script>
+
+</html>
