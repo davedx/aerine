@@ -6,11 +6,11 @@ Inspiration:
 * React, Relay and GraphQL declarative views, data fetching, and data flow
 
 * These two things didn't go far enough:
-  * Rails still requires devs to do lots of wiring once the very basic CRUD controllers are generated using CLI
-  * Working with migrations during development is a chore, this could only be for production
-  * GraphQL is painful to implement in backend. DataLoader is another rabbit warren.
+  * Rails still requires opaque wiring
+  * Database evolution (migrations) could be easier in development
+  * GraphQL is painful and tricky to implement in backend
   * Relay has echoes of Redux, boilerplate
-  * Facebook projects tend to be technically powerful but don't always have cleanest API's
+  * Facebook projects tend to be technically powerful but don't always have simplest API's
 
 * Data driven development:
   * View templates are the source of truth for what data is required
