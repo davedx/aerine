@@ -23,7 +23,7 @@ const types = {
   },
   user: {
     table: 'users',
-    writable: ['session_token']
+    writable: ['username', 'password', 'session_token']
   }
 }
 
@@ -154,7 +154,10 @@ const handleDelete = async query => {
   }
 }
 
-const mapUpdate = (query, { createdTimestamp }) => {
+const mapUpdate = (query, type, { isInsert }) => {
+  const columns = []
+  const values = []
+
   for (let key in query.update) {
     const value = query.update[key]
     if (!type.writable.includes(key)) {
@@ -169,11 +172,8 @@ const mapUpdate = (query, { createdTimestamp }) => {
     }
     values.push(val)
   }
-  const user_id = getAuthenticatedUser()
-  columns.push('user_id')
-  values.push(user_id)
 
-  if (createdTimestamp) {
+  if (isInsert) {
     columns.push('inserted_at')
   }
   columns.push('updated_at')
@@ -181,7 +181,7 @@ const mapUpdate = (query, { createdTimestamp }) => {
   const parts = d.split('T')
   const pgTs = `${parts[0]} ${(parts[1].split('.'))[0]}`
 
-  if (createdTimestamp) {
+  if (isInsert) {
     values.push(`'${pgTs}'`)
   }
 
@@ -191,6 +191,35 @@ const mapUpdate = (query, { createdTimestamp }) => {
 }
 
 const handleUpdate = async query => {
+  try {
+    const type = types[query.action]
+
+    const { columns, values } = mapUpdate(query, type, { createdTimestamp: false })
+
+    const set = columns.map((val, idx) => {
+      return `${val}=${values[idx]}`
+    })
+
+    const user_id = getAuthenticatedUser()
+
+    const sql = `UPDATE ${type.table} SET ${set.join(', ')}`
+    console.log(sql)
+    return {}
+    const data = await pool.query(sql)
+    if (data.rowCount !== 1) {
+      throw new Error(`Failed to insert new ${query.action}`)
+    }
+
+    const response = handleRead(query.queries)
+    console.log(response)
+
+    return response
+  } catch (e) {
+    console.error(e)
+    return {
+      error: e.message
+    }
+  }
 }
 
 const handleCreate = async query => {
@@ -198,11 +227,16 @@ const handleCreate = async query => {
   // TODO: nested inserts
   try {
     const type = types[query.action]
-    const { columns, values } = mapUpdate(query, { createdTimestamp: true })
+    const { columns, values } = mapUpdate(query, type, { isInsert: true })
+
+    // FIXME: if not a user!
+    const user_id = getAuthenticatedUser()
+    columns.push('user_id')
+    values.push(user_id)
 
     const insertedColumns = columns.join(', ')
-    //const returnedColumns = columns.concat(['id']).join(', ')
-    const sql = `INSERT INTO ${type.table} (${insertedColumns}) VALUES (${values.join(', ')})`// RETURNING ${returnedColumns}`
+
+    const sql = `INSERT INTO ${type.table} (${insertedColumns}) VALUES (${values.join(', ')})`
     console.log(sql)
     const data = await pool.query(sql)
     if (data.rowCount !== 1) {
@@ -227,11 +261,14 @@ app.use(async ctx => {
 
     console.log('query: ', query)
 
+    // TODO: switch/case
     if (query.action && query.method) {
       if (query.method === 'create') {
         response = await handleCreate(query)
       } else if (query.method === 'delete') {
         response = await handleDelete(query)
+      } else if (query.method === 'update') {
+        response = await handleUpdate(query)
       }
     } else {
       response = await handleRead(query)

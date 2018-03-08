@@ -27,11 +27,17 @@ Inspiration:
     * Also includes a session token for every user
   * All data also has owners: creator and updater
     * This enables a default authorization system
-  * Just Use Postgres (tm)
+
+* Familiarity
+  * Use the most familiar concepts that are proven instead of inventing new things
+  * Just Use Postgres
     * (Although try to keep the API so that other storage engines could be used)
-  * Just Use REST (tm)
+  * Just Use REST
     * Extend REST cleanly
     * Allow API to be easily and simply used by third party clients (e.g. mobile apps or other API's)
-  * Just Use JavaScript and JSON (tm)
-    * Duh
+  * Just Use JavaScript and JSON
+    * Great language (now) and best data transfer format
+  * Just use HTML and CSS
+    * Try to avoid preprocessors as much as possible
+    * Use standard HTML5 tags and attributes as much as possible
 
