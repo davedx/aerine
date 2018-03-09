@@ -15,7 +15,7 @@ A. Not yet
 
 Q. What can it do so far?
 
-A. Automatic runtime database migration (when non-destrucive)
+A. Automatic runtime database migration (when non-destructive)
 
 A. Built-in end-to-end CRUD operations based only on HTML5 forms and data type definitions
 
