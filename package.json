@@ -13,6 +13,7 @@
   },
   "devDependencies": {},
   "scripts": {
+    "start": "node_modules/nodemon/bin/nodemon.js backend/app",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

@@ -1,20 +1,18 @@
 const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const koaStatic = require('koa-static')
-const { Pool, Client } = require('pg')
 
 const functions = require('./functions')
+const {
+  connectDb,
+  buildQuery,
+  accumulateTuple,
+  mapUpdate
+} = require('./db')
 
 const app = new Koa()
 app.use(bodyParser({enableTypes: ['text', 'json']}))
-app.use(koaStatic('./app/'));
-
-const pool = new Pool({
-  user: 'dave',
-  host: 'localhost',
-  database: 'solnet_dev',
-  password: ''
-})
+app.use(koaStatic('./frontend/'));
 
 // TODO: tool to auto-build from DB schema?
 // but this is user config, like schema.rb
@@ -27,7 +25,8 @@ const types = {
   user: {
     table: 'users',
     functions: {
-      update: 'authenticateUser'
+      update: 'authenticateUser',
+      create: 'createUser'
     }
   }
 }
@@ -36,41 +35,7 @@ const getAuthenticatedUser = (token) => {
   return 1
 }
 
-const buildQuery = (tuples, filters) => {
-  let sql = 'SELECT'
-  let tables = []
-  let columns = []
-  for (let i = 0; i < tuples.length; i++) {
-    let typeEntry = types[tuples[i].type]
-    let table = typeEntry.table
-    tables.push(`${table} ${table[0]}`)
-    for (let k = 0; k < tuples[i].properties.length; k++) {
-      columns.push(`${table[0]}.${tuples[i].properties[k]}`)
-    }
-  }
-  // FIXME - loop 2 at a time?
-  let t1 = types[tuples[0].type]
-  let t2 = types[tuples[1].type]
-  // JOIN
-  filters.push(`${t2.table[0]}.id=${t1.table[0]}.${t1.relationFrom[0]}`)
-  sql = `SELECT ${columns.join(', ')} FROM ${tables.join(', ')} WHERE ${filters.join(' AND ')}`
-  return sql
-}
-
-const accumulateTuple = (tuples, ref, i1, i2, relation) => {
-  let tuple = tuples.find(t => t.type === ref[i1])
-  if (!tuple) {
-    tuple = {type: ref[i1], properties: [ref[i2]]}
-    tuples.push(tuple)
-  } else {
-    tuple.properties.push(ref[i2])
-  }
-  if (relation) {
-    tuple.relation = relation
-  }
-}
-
-const handleRead = async query => {
+const handleRead = async (pool, query) => {
   const refs = (query.__references || []).map(e => e.split('.'))
   console.log('refs: ', refs)
   let response = {}
@@ -140,7 +105,7 @@ const handleRead = async query => {
   return response
 }
 
-const handleDelete = async query => {
+const handleDelete = async (pool, query) => {
   console.log('handleDelete: ', query)
   const id = query.id
   const table = types[query.action].table
@@ -159,49 +124,12 @@ const handleDelete = async query => {
   }
 }
 
-const mapUpdate = (query, type, { isInsert }) => {
-  const columns = []
-  const values = []
-
-  for (let key in query.update) {
-    const value = query.update[key]
-    if (!type.writable.includes(key)) {
-      throw new Error(`Cannot write to ${key} on ${query.action}`)
-    }
-    columns.push(key)
-    let val
-    if (typeof value !== 'number') {
-      val = `'${value}'`
-    } else {
-      val = value
-    }
-    values.push(val)
-  }
-
-  if (isInsert) {
-    columns.push('inserted_at')
-  }
-  columns.push('updated_at')
-  const d = new Date().toJSON()
-  const parts = d.split('T')
-  const pgTs = `${parts[0]} ${(parts[1].split('.'))[0]}`
-
-  if (isInsert) {
-    values.push(`'${pgTs}'`)
-  }
-
-  values.push(`'${pgTs}'`)
-
-  return { columns, values }
-}
-
-const handleUpdate = async query => {
+const handleUpdate = async (pool, query) => {
   try {
     const type = types[query.action]
 
     if (type.functions && type.functions.update) {
-      console.log('invoke ', type.functions.update, functions)
-      return functions[type.functions.update](pool, query.update)
+      return await functions[type.functions.update](pool, query.update)
     }
 
     const { columns, values } = mapUpdate(query, type, { createdTimestamp: false })
@@ -220,23 +148,27 @@ const handleUpdate = async query => {
       throw new Error(`Failed to insert new ${query.action}`)
     }
 
-    const response = handleRead(query.queries)
+    const response = handleRead(pool, query.queries)
     console.log(response)
 
     return response
   } catch (e) {
-    console.error(e)
+    console.error('Error: ', e)
     return {
       error: e.message
     }
   }
 }
 
-const handleCreate = async query => {
+const handleCreate = async (pool, query) => {
   // TODO: validation
   // TODO: nested inserts
   try {
     const type = types[query.action]
+
+    if (type.functions && type.functions.create) {
+      return await functions[type.functions.create](pool, query.update)
+    }
     const { columns, values } = mapUpdate(query, type, { isInsert: true })
 
     // FIXME: if not a user!
@@ -247,45 +179,53 @@ const handleCreate = async query => {
     const insertedColumns = columns.join(', ')
 
     const sql = `INSERT INTO ${type.table} (${insertedColumns}) VALUES (${values.join(', ')})`
+
     console.log(sql)
     const data = await pool.query(sql)
     if (data.rowCount !== 1) {
       throw new Error(`Failed to insert new ${query.action}`)
     }
 
-    const response = handleRead(query.queries)
+    const response = handleRead(pool, query.queries)
     console.log(response)
 
     return response
   } catch (e) {
+    console.error('Error: ', e)
     return {
       error: e.message
     }
   }
 }
 
-app.use(async ctx => {
-  if (ctx.request.href.indexOf('data') !== -1) {
-    const query = ctx.request.body
-    let response = {}
+const init = () => {
+  const pool = connectDb()
 
-    console.log('query: ', query)
+  app.use(async ctx => {
+    if (ctx.request.href.indexOf('data') !== -1) {
+      const query = ctx.request.body
+      let response = {}
 
-    // TODO: switch/case
-    if (query.action && query.method) {
-      if (query.method === 'create') {
-        response = await handleCreate(query)
-      } else if (query.method === 'delete') {
-        response = await handleDelete(query)
-      } else if (query.method === 'update') {
-        response = await handleUpdate(query)
+      console.log('query: ', query)
+
+      // TODO: switch/case
+      if (query.action && query.method) {
+        if (query.method === 'create') {
+          response = await handleCreate(pool, query)
+        } else if (query.method === 'delete') {
+          response = await handleDelete(pool, query)
+        } else if (query.method === 'update') {
+          response = await handleUpdate(pool, query)
+        }
+      } else {
+        response = await handleRead(pool, query)
       }
-    } else {
-      response = await handleRead(query)
+
+      ctx.body = response
     }
+  })
 
-    ctx.body = response
-  }
-})
+  app.listen(3000)
+}
 
-app.listen(3000)
+init()
