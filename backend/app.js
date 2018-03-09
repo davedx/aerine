@@ -86,7 +86,7 @@ const handleRead = async (pool, query) => {
 
     const filters = [`p.user_id=${user_id}`] //FIXME
 
-    const sql = buildQuery(tuples, filters)
+    const sql = buildQuery(types, tuples, filters)
     console.log('sql: ', sql)
 
     //const sql = `SELECT * FROM ${types[type].table} ${filter}`

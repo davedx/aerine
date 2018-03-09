@@ -14,7 +14,7 @@ const pgTypes = {
   integer: 'bigint'
 }
 
-const buildQuery = (tuples, filters) => {
+const buildQuery = (types, tuples, filters) => {
   let sql = 'SELECT'
   let tables = []
   let columns = []

@@ -16,6 +16,21 @@ async function http(body, { contentType, method }) {
   })
 }
 
+const authenticateUser = (body) => {
+  if (body.status === 'OK') {
+    // TODO: use sessionStorage instead maybe?
+    localStorage.setItem('token', body.token)
+  }
+}
+
+const onEvent = (body) => {
+  switch (body.event) {
+    case 'AUTHENTICATE_USER':
+      authenticateUser(body)
+      break
+  }
+}
+
 const renderTemplate = (context) => {
   const { app, template, data, queries } = context
 

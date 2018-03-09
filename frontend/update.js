@@ -12,8 +12,10 @@ const formSubmitted = async (e, context) => {
   e.preventDefault()
 //  console.log('form submitted: ', e)
   const attrs = e.target.attributes
+  console.log(attrs)
   const method = attrs['method'].value
   const action = attrs['action'].value
+  const onSuccessUrl = attrs['onsuccessurl']
   const elements = e.target.elements
   console.log('form: '+method+' -> '+action)
   let update = {}
@@ -32,6 +34,18 @@ const formSubmitted = async (e, context) => {
 //    __references: context.references
   }, { contentType: 'application/json' })
   console.log(response)
+  if (response.event) {
+    onEvent(response)
+  }
+
+  if (response.status === 'OK') {
+    //const onSuccessUrl = e.target.attributes['onsuccessurl']
+    console.log(onSuccessUrl)
+    if (onSuccessUrl) {
+      window.location = onSuccessUrl.value + '.html'
+//      console.log('navigate to: ', onSuccessUrl.value)
+    }
+  }
 
   const newContext = mergeContext(context, response)
   

@@ -31,6 +31,7 @@ const updateSchemaForTable = async (pool, type) => {
       }
 
       const dataType = pgTypes[nativeType]
+      // TODO: foreign keys
       const sql = `ALTER TABLE ${type.table} ADD COLUMN ${name} ${dataType}`
       console.log('sql: ', sql)
       const result = await pool.query(sql)
