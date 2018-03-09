@@ -9,6 +9,11 @@ const connectDb = () => {
   })
 }
 
+const pgTypes = {
+  string: 'varchar(255)',
+  integer: 'bigint'
+}
+
 const buildQuery = (tuples, filters) => {
   let sql = 'SELECT'
   let tables = []
@@ -65,9 +70,10 @@ const mapUpdate = (query, type, { isInsert }) => {
 
   for (let key in query.update) {
     const value = query.update[key]
-    if (!type.writable.includes(key)) {
-      throw new Error(`Cannot write to ${key} on ${query.action}`)
-    }
+    // FIXME: validations (including authorization)
+    // if (!type.writable.includes(key)) {
+    //   throw new Error(`Cannot write to ${key} on ${query.action}`)
+    // }
     columns.push(key)
     let val
     if (typeof value !== 'number') {
@@ -84,6 +90,7 @@ const mapUpdate = (query, type, { isInsert }) => {
 }
 
 module.exports = {
+  pgTypes,
   connectDb,
   buildQuery,
   accumulateTuple,

@@ -10,6 +10,8 @@ const {
   mapUpdate
 } = require('./db')
 
+const { getSchemaForTable, updateSchemaForTable } = require('./schema')
+
 const app = new Koa()
 app.use(bodyParser({enableTypes: ['text', 'json']}))
 app.use(koaStatic('./frontend/'));
@@ -19,11 +21,23 @@ app.use(koaStatic('./frontend/'));
 const types = {
   post: {
     table: 'posts',
-    writable: ['body', 'user_id'],
+    properties: [
+      { body: 'string' },
+      { user_id: { type: 'integer', relationFrom: 'user' } }
+    ],
     relationFrom: ['user_id', 'user']
   },
   user: {
     table: 'users',
+    properties: [
+      { first_name: 'string' },
+      { surname: 'string' },
+      { email: 'string' },
+      { token: 'string' },
+      { password: 'string' },
+      { bio: 'string' },
+      { location: 'string' }
+    ],
     functions: {
       update: 'authenticateUser',
       create: 'createUser'
@@ -198,8 +212,14 @@ const handleCreate = async (pool, query) => {
   }
 }
 
-const init = () => {
+const init = async () => {
   const pool = connectDb()
+
+  // TODO: ONLY IF NODE_ENV=development
+  for (let key in types) {
+    await updateSchemaForTable(pool, types[key])
+  }
+//  getSchemaForTable(pool, 'users')
 
   app.use(async ctx => {
     if (ctx.request.href.indexOf('data') !== -1) {

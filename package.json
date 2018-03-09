@@ -8,6 +8,7 @@
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
     "koa-static": "^4.0.2",
+    "lodash": "^4.17.5",
     "nodemon": "^1.17.1",
     "pg": "^7.4.1"
   },
