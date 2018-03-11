@@ -45,22 +45,30 @@ const types = {
   }
 }
 
-const getAuthenticatedUser = (token) => {
-  return 1
+const getAuthenticatedUser = async (pool, token) => {
+  if (!token) {
+    return
+  }
+
+  const sql = `SELECT id, email, token FROM users WHERE token='${token}'`
+  const result = await pool.query(sql)
+  if (result.rows) {
+    return result.rows[0]
+  }
 }
 
-const handleRead = async (pool, query) => {
+const handleRead = async (pool, user, query) => {
   const refs = (query.__references || []).map(e => e.split('.'))
   console.log('refs: ', refs)
+
   let response = {}
 
   for (let key in query) {
-    if (key === '__references') {
+    if (key.indexOf('__') === 0) {
       continue
     }
     const type = query[key].type
     const owner = query[key].owner
-    const user_id = getAuthenticatedUser()
     //console.log('key: ', key, ' type: ', type, types[type])
 
     const refsForType = refs.filter(refList => refList[0] === key)
@@ -84,7 +92,10 @@ const handleRead = async (pool, query) => {
 
     //console.log('tuples: ', tuples)
 
-    const filters = [`p.user_id=${user_id}`] //FIXME
+    const filters = []
+    if (user) {
+      filters.push(`p.user_id=${user.id}`)
+    }
 
     const sql = buildQuery(types, tuples, filters)
     console.log('sql: ', sql)
@@ -119,7 +130,7 @@ const handleRead = async (pool, query) => {
   return response
 }
 
-const handleDelete = async (pool, query) => {
+const handleDelete = async (pool, user, query) => {
   console.log('handleDelete: ', query)
   const id = query.id
   const table = types[query.action].table
@@ -128,7 +139,7 @@ const handleDelete = async (pool, query) => {
     console.log(sql)
     const result = await pool.query(sql)
 
-    const response = handleRead(query.queries)
+    const response = handleRead(pool, user, query.queries)
     console.log(response)
     return response
   } catch (e) {
@@ -138,12 +149,12 @@ const handleDelete = async (pool, query) => {
   }
 }
 
-const handleUpdate = async (pool, query) => {
+const handleUpdate = async (pool, user, query) => {
   try {
     const type = types[query.action]
 
     if (type.functions && type.functions.update) {
-      return await functions[type.functions.update](pool, query.update)
+      return await functions[type.functions.update](pool, user, query.update)
     }
 
     const { columns, values } = mapUpdate(query, type, { createdTimestamp: false })
@@ -151,8 +162,6 @@ const handleUpdate = async (pool, query) => {
     const set = columns.map((val, idx) => {
       return `${val}=${values[idx]}`
     })
-
-    const user_id = getAuthenticatedUser()
 
     const sql = `UPDATE ${type.table} SET ${set.join(', ')}`
     console.log(sql)
@@ -162,7 +171,7 @@ const handleUpdate = async (pool, query) => {
       throw new Error(`Failed to insert new ${query.action}`)
     }
 
-    const response = handleRead(pool, query.queries)
+    const response = handleRead(pool, user, query.queries)
     console.log(response)
 
     return response
@@ -174,7 +183,8 @@ const handleUpdate = async (pool, query) => {
   }
 }
 
-const handleCreate = async (pool, query) => {
+const handleCreate = async (pool, user, query) => {
+
   // TODO: validation
   // TODO: nested inserts
   try {
@@ -185,10 +195,10 @@ const handleCreate = async (pool, query) => {
     }
     const { columns, values } = mapUpdate(query, type, { isInsert: true })
 
-    // FIXME: if not a user!
-    const user_id = getAuthenticatedUser()
-    columns.push('user_id')
-    values.push(user_id)
+    if (user) {
+      columns.push('user_id')
+      values.push(user.id)
+    }
 
     const insertedColumns = columns.join(', ')
 
@@ -200,7 +210,7 @@ const handleCreate = async (pool, query) => {
       throw new Error(`Failed to insert new ${query.action}`)
     }
 
-    const response = handleRead(pool, query.queries)
+    const response = handleRead(pool, user, query.queries)
     console.log(response)
 
     return response
@@ -225,20 +235,25 @@ const init = async () => {
     if (ctx.request.href.indexOf('data') !== -1) {
       const query = ctx.request.body
       let response = {}
+      let user
+
+      if (ctx.request.headers['x-token']) {
+        user = await getAuthenticatedUser(pool, ctx.request.headers['x-token'])
+      }
 
       console.log('query: ', query)
 
       // TODO: switch/case
       if (query.action && query.method) {
         if (query.method === 'create') {
-          response = await handleCreate(pool, query)
+          response = await handleCreate(pool, user, query)
         } else if (query.method === 'delete') {
-          response = await handleDelete(pool, query)
+          response = await handleDelete(pool, user, query)
         } else if (query.method === 'update') {
-          response = await handleUpdate(pool, query)
+          response = await handleUpdate(pool, user, query)
         }
       } else {
-        response = await handleRead(pool, query)
+        response = await handleRead(pool, user, query)
       }
 
       ctx.body = response

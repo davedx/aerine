@@ -3,10 +3,12 @@
 // TODO: make this REST compatible: __references an extension of a standard REST query of the root object type
 // this way we can have mobile and other clients... (not like Meteor)
 async function http(body, { contentType, method }) {
+  const token = sessionStorage.getItem('token')
   return await fetch('/data', {
     body: JSON.stringify(body),
     headers: new Headers({
-      'Content-Type': contentType || 'text/plain'
+      'Content-Type': contentType || 'text/plain',
+      'X-token': token
     }),
     method: method || 'POST'
   }).then(function(response) {
@@ -18,8 +20,7 @@ async function http(body, { contentType, method }) {
 
 const authenticateUser = (body) => {
   if (body.status === 'OK') {
-    // TODO: use sessionStorage instead maybe?
-    localStorage.setItem('token', body.token)
+    sessionStorage.setItem('token', body.token)
   }
 }
 
