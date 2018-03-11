@@ -3,7 +3,7 @@ const uuidv4 = require('uuid/v4')
 const { getTimestamps } = require('./db')
 // const minLength = 6
 
-const createUser = async (pool, user) => {
+const createUser = async (pool, currentUser, user) => {
   console.log('bcrypt: ', user)
   const passwordHash = await bcrypt.hash(user.password, 10)
   console.log('createUser. hash = ', passwordHash)
@@ -22,7 +22,7 @@ const createUser = async (pool, user) => {
   return {event: 'CREATE_USER', status: 'OK'}
 }
 
-const authenticateUser = async (pool, user) => {
+const authenticateUser = async (pool, currentUser, user) => {
   console.log('authenticateUser')
 
   const { email, password } = user
