@@ -9,6 +9,12 @@
 * Provide a complete out of the box solution (full stack, vertically integrated)
 * Continue the great tradition of convention over configuration
 
+### Warning
+
+This framework is currently entirely open to SQL injection, DOS, and XSS attacks. Don't use it except for testing yet!
+
+### FAQ
+
 Q. Is it ready yet?
 
 A. Not yet

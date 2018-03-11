@@ -14,6 +14,11 @@
   <div id='app'></div>
 </body>
 <template id='Timeline' data='{"posts": {"type": "post", "owner": "authed"}}'>
+  <div class='user-control'>
+    <div class='status'>Logged in as {{ currentUser.email }}</div>
+    <div class='action'>
+      <button action='user' type='delete' onSuccessUrl='index'>Log out</button>
+    </div>
   <div>
     <h1>Timeline</h1>
 

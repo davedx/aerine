@@ -39,8 +39,9 @@ const types = {
       { location: 'string' }
     ],
     functions: {
-      update: 'authenticateUser',
-      create: 'createUser'
+      update: 'loginUser',
+      create: 'createUser',
+      delete: 'logoutUser'
     }
   }
 }
@@ -58,6 +59,9 @@ const getAuthenticatedUser = async (pool, token) => {
 }
 
 const handleRead = async (pool, user, query) => {
+  // FIXME: currently if no user, selects EVERYTHING
+  // this behaviour should be controlled and definable in user types
+
   const refs = (query.__references || []).map(e => e.split('.'))
   console.log('refs: ', refs)
 
@@ -132,10 +136,19 @@ const handleRead = async (pool, user, query) => {
 
 const handleDelete = async (pool, user, query) => {
   console.log('handleDelete: ', query)
-  const id = query.id
-  const table = types[query.action].table
   try {
-    const sql = `DELETE FROM ${table} WHERE id=${id}`
+    const type = types[query.action]
+    const id = query.id
+
+    if (type.functions && type.functions.delete) {
+      return await functions[type.functions.delete](pool, user, query.update)
+    }
+
+    if (!id) {
+      throw new Error(`Cannot delete if no ID specified`)
+    }
+
+    const sql = `DELETE FROM ${type.table} WHERE id=${id}`
     console.log(sql)
     const result = await pool.query(sql)
 
@@ -143,6 +156,7 @@ const handleDelete = async (pool, user, query) => {
     console.log(response)
     return response
   } catch (e) {
+    console.error('Error: ', e)
     return {
       error: e.message
     }
@@ -191,7 +205,7 @@ const handleCreate = async (pool, user, query) => {
     const type = types[query.action]
 
     if (type.functions && type.functions.create) {
-      return await functions[type.functions.create](pool, query.update)
+      return await functions[type.functions.create](pool, user, query.update)
     }
     const { columns, values } = mapUpdate(query, type, { isInsert: true })
 
@@ -245,17 +259,25 @@ const init = async () => {
 
       // TODO: switch/case
       if (query.action && query.method) {
-        if (query.method === 'create') {
-          response = await handleCreate(pool, user, query)
-        } else if (query.method === 'delete') {
-          response = await handleDelete(pool, user, query)
-        } else if (query.method === 'update') {
-          response = await handleUpdate(pool, user, query)
+        switch (query.method) {
+          case 'create':
+            response = await handleCreate(pool, user, query)
+            break
+          case 'delete':
+            response = await handleDelete(pool, user, query)
+            break
+          case 'update':
+            response = await handleUpdate(pool, user, query)
+            break
         }
       } else {
         response = await handleRead(pool, user, query)
       }
-
+      if (user) {
+        // FIXME: still set if just logged out in handleDelete().
+        // need to reorganize that
+        response.currentUser = user
+      }
       ctx.body = response
     }
   })

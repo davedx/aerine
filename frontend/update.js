@@ -8,11 +8,20 @@ const mergeContext = (context, data) => {
   }
 }
 
+const maybeRedirect = (response, onSuccessUrl) => {
+  if (response.status === 'OK') {
+    if (onSuccessUrl) {
+      window.location = onSuccessUrl.value + '.html'
+      return true
+    }
+  }
+  return false
+}
+
 const formSubmitted = async (e, context) => {
   e.preventDefault()
 //  console.log('form submitted: ', e)
   const attrs = e.target.attributes
-  console.log(attrs)
   const method = attrs['method'].value
   const action = attrs['action'].value
   const onSuccessUrl = attrs['onsuccessurl']
@@ -31,29 +40,21 @@ const formSubmitted = async (e, context) => {
     method,
     update,
     queries: context.queries
-//    __references: context.references
   }, { contentType: 'application/json' })
   console.log(response)
-  if (response.event) {
-    onEvent(response)
-  }
 
-  if (response.status === 'OK') {
-    //const onSuccessUrl = e.target.attributes['onsuccessurl']
-    console.log(onSuccessUrl)
-    if (onSuccessUrl) {
-      window.location = onSuccessUrl.value + '.html'
-//      console.log('navigate to: ', onSuccessUrl.value)
-    }
+  if (maybeRedirect(response, onSuccessUrl)) {
+    return
   }
 
   const newContext = mergeContext(context, response)
-  
   renderTemplate(newContext)
 }
 
 const deleteClicked = async (e, id, context) => {
-  const action = e.target.attributes['action'].value
+  const attrs = e.target.attributes
+  const action = attrs['action'].value
+  const onSuccessUrl = attrs['onsuccessurl']
   console.log('deleteClicked: ', id)
   const response = await http({
     action,
@@ -62,6 +63,10 @@ const deleteClicked = async (e, id, context) => {
     queries: context.queries
   }, { contentType: 'application/json' })
   console.log(response)
+
+  if (maybeRedirect(response, onSuccessUrl)) {
+    return
+  }
 
   const newContext = mergeContext(context, response)
   

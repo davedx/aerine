@@ -9,6 +9,7 @@ const replaceTemplate = (html, name, value) => {
   //console.log(matches)
   for (let i = 0; i < matches.length; i++) {
     const expr = matches[i].replace('{{', '').replace('}}', '').trim()
+    //console.log('trying to get: ', {[name]: value}, expr)
     const entry = _.get({[name]: value}, `${expr}`)
     html = html.replace(matches[i], entry)
   }
@@ -42,8 +43,15 @@ const processNodes = (node, data) => {
   } else {
     const children = node.content ? node.content.children : node.children
     const len = children.length
-    for (let i = 0; i < len; i++) {
-      processNodes(children[i], data)
+    if (len > 0) {
+      for (let i = 0; i < len; i++) {
+        processNodes(children[i], data)
+      }
+    } else {
+      if (node.innerHTML.indexOf('{{') !== -1) {
+        // FIXME
+        node.innerHTML = replaceTemplate(node.innerHTML, 'currentUser', data.currentUser)
+      }
     }
   }
 }

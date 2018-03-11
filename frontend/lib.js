@@ -14,19 +14,28 @@ async function http(body, { contentType, method }) {
   }).then(function(response) {
     return response.json()
   }).then(function(myJson) {
+    if (myJson.event) {
+      onEvent(myJson)
+    }
     return myJson
   })
 }
 
 const authenticateUser = (body) => {
   if (body.status === 'OK') {
-    sessionStorage.setItem('token', body.token)
+    if (body.token) {
+      sessionStorage.setItem('token', body.token)
+    } else {
+      console.log('logged out. removing token')
+      sessionStorage.removeItem('token')
+    }
   }
 }
 
 const onEvent = (body) => {
   switch (body.event) {
-    case 'AUTHENTICATE_USER':
+    case 'LOGIN_USER':
+    case 'LOGOUT_USER':
       authenticateUser(body)
       break
   }
