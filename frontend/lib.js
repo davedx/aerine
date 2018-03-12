@@ -4,41 +4,31 @@
 // this way we can have mobile and other clients... (not like Meteor)
 async function http(body, { contentType, method }) {
   const token = sessionStorage.getItem('token')
+  const headers = {
+    'Content-Type': contentType || 'text/plain'
+  }
+  if (token) {
+    headers['X-token'] = token
+  }
+
   return await fetch('/data', {
     body: JSON.stringify(body),
-    headers: new Headers({
-      'Content-Type': contentType || 'text/plain',
-      'X-token': token
-    }),
+    headers: new Headers(headers),
     method: method || 'POST'
   }).then(function(response) {
+    if (response.headers.has('x-token')) {
+      const token = response.headers.get('x-token')
+      if (token) {
+        sessionStorage.setItem('token', token)
+      } else {
+        sessionStorage.removeItem('token')
+      }
+    }
+
     return response.json()
-  }).then(function(myJson) {
-    if (myJson.event) {
-      onEvent(myJson)
-    }
-    return myJson
+  }).then(function(json) {
+    return json
   })
-}
-
-const authenticateUser = (body) => {
-  if (body.status === 'OK') {
-    if (body.token) {
-      sessionStorage.setItem('token', body.token)
-    } else {
-      console.log('logged out. removing token')
-      sessionStorage.removeItem('token')
-    }
-  }
-}
-
-const onEvent = (body) => {
-  switch (body.event) {
-    case 'LOGIN_USER':
-    case 'LOGOUT_USER':
-      authenticateUser(body)
-      break
-  }
 }
 
 const renderTemplate = (context) => {

@@ -58,14 +58,15 @@ const getAuthenticatedUser = async (pool, token) => {
   }
 }
 
-const handleRead = async (pool, user, query) => {
+const handleRead = async (pool, user, query, response) => {
   // FIXME: currently if no user, selects EVERYTHING
   // this behaviour should be controlled and definable in user types
+  if (!query) {
+    return
+  }
 
   const refs = (query.__references || []).map(e => e.split('.'))
   console.log('refs: ', refs)
-
-  let response = {}
 
   for (let key in query) {
     if (key.indexOf('__') === 0) {
@@ -109,7 +110,7 @@ const handleRead = async (pool, user, query) => {
     try {
       const data = await pool.query(sql)
       console.log(data.rows)
-      response[key] = data.rows.map(row => {
+      response.body[key] = data.rows.map(row => {
         let newRow = {}
         for (let prop in row) {
           let tuple = tuples.find(t => t.properties.find(p => p === prop))
@@ -126,22 +127,26 @@ const handleRead = async (pool, user, query) => {
         return newRow
       })
     } catch (e) {
-      response[key] = {
+      response.body[key] = {
         error: e.message
       }
     }
   }
-  return response
+
+  return true
 }
 
-const handleDelete = async (pool, user, query) => {
+const handleDelete = async (pool, user, query, response) => {
   console.log('handleDelete: ', query)
   try {
     const type = types[query.action]
     const id = query.id
 
     if (type.functions && type.functions.delete) {
-      return await functions[type.functions.delete](pool, user, query.update)
+      const result = await functions[type.functions.delete](pool, user, query.update, response)
+      if (!result) {
+        return true
+      }
     }
 
     if (!id) {
@@ -150,54 +155,66 @@ const handleDelete = async (pool, user, query) => {
 
     const sql = `DELETE FROM ${type.table} WHERE id=${id}`
     console.log(sql)
+
     const result = await pool.query(sql)
 
-    const response = handleRead(pool, user, query.queries)
-    console.log(response)
-    return response
+    await handleRead(pool, user, query.queries, response)
+
+    return true
   } catch (e) {
     console.error('Error: ', e)
-    return {
+    response.body = {
       error: e.message
     }
   }
 }
 
-const handleUpdate = async (pool, user, query) => {
+const handleUpdate = async (pool, user, query, response) => {
   try {
     const type = types[query.action]
 
     if (type.functions && type.functions.update) {
-      return await functions[type.functions.update](pool, user, query.update)
+      const result = await functions[type.functions.update](pool, user, query.update, response)
+      if (!result) {
+        return true
+      }
+      query.update = result.update
+      query.id = result.id
+      if (result.headers) {
+        response.headers = result.headers
+      }
     }
 
-    const { columns, values } = mapUpdate(query, type, { createdTimestamp: false })
+    if (!query.id) {
+      throw new Error(`Cannot perform update with no ID specified`)
+    }
+
+    const { columns, values } = mapUpdate(query.update, type, { isInsert: false })
 
     const set = columns.map((val, idx) => {
       return `${val}=${values[idx]}`
     })
 
-    const sql = `UPDATE ${type.table} SET ${set.join(', ')}`
+    const sql = `UPDATE ${type.table} SET ${set.join(', ')} WHERE id=${query.id}`
     console.log(sql)
-    return {}
+
     const data = await pool.query(sql)
     if (data.rowCount !== 1) {
-      throw new Error(`Failed to insert new ${query.action}`)
+      throw new Error(`Failed to update ${query.action}`)
     }
 
-    const response = handleRead(pool, user, query.queries)
-    console.log(response)
+    await handleRead(pool, user, query.queries, response)
 
-    return response
+    return true
   } catch (e) {
     console.error('Error: ', e)
-    return {
+    response.body = {
       error: e.message
     }
   }
 }
 
-const handleCreate = async (pool, user, query) => {
+const handleCreate = async (pool, user, query, response) => {
 
   // TODO: validation
   // TODO: nested inserts
@@ -205,11 +222,16 @@ const handleCreate = async (pool, user, query) => {
     const type = types[query.action]
 
     if (type.functions && type.functions.create) {
-      return await functions[type.functions.create](pool, user, query.update)
+      const result = await functions[type.functions.create](pool, user, query.update, response)
+      if (!result) {
+        return true
+      }
+      query.update = result
     }
-    const { columns, values } = mapUpdate(query, type, { isInsert: true })
 
-    if (user) {
+    const { columns, values } = mapUpdate(query.update, type, { isInsert: true })
+
+    if (user && type.table !== 'users') {
       columns.push('user_id')
       values.push(user.id)
     }
@@ -219,18 +241,18 @@ const handleCreate = async (pool, user, query) => {
     const sql = `INSERT INTO ${type.table} (${insertedColumns}) VALUES (${values.join(', ')})`
 
     console.log(sql)
+
     const data = await pool.query(sql)
     if (data.rowCount !== 1) {
       throw new Error(`Failed to insert new ${query.action}`)
     }
 
-    const response = handleRead(pool, user, query.queries)
-    console.log(response)
+    await handleRead(pool, user, query.queries, response)
 
-    return response
+    return true
   } catch (e) {
     console.error('Error: ', e)
-    return {
+    response.body = {
       error: e.message
     }
   }
@@ -248,37 +270,44 @@ const init = async () => {
   app.use(async ctx => {
     if (ctx.request.href.indexOf('data') !== -1) {
       const query = ctx.request.body
-      let response = {}
       let user
 
       if (ctx.request.headers['x-token']) {
         user = await getAuthenticatedUser(pool, ctx.request.headers['x-token'])
       }
 
+      const response = {
+        body: {}
+      }
+
+      if (user) {
+        response.body.currentUser = user
+      }
+
       console.log('query: ', query)
 
-      // TODO: switch/case
       if (query.action && query.method) {
         switch (query.method) {
           case 'create':
-            response = await handleCreate(pool, user, query)
+            await handleCreate(pool, user, query, response)
             break
           case 'delete':
-            response = await handleDelete(pool, user, query)
+            await handleDelete(pool, user, query, response)
             break
           case 'update':
-            response = await handleUpdate(pool, user, query)
+            await handleUpdate(pool, user, query, response)
             break
         }
       } else {
-        response = await handleRead(pool, user, query)
+        await handleRead(pool, user, query, response)
       }
-      if (user) {
-        // FIXME: still set if just logged out in handleDelete().
-        // need to reorganize that
-        response.currentUser = user
+
+      if (response.headers) {
+        for (let key in response.headers) {
+          ctx.set(key, response.headers[key])
+        }
       }
-      ctx.body = response
+      ctx.body = response.body
     }
   })
 

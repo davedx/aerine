@@ -64,12 +64,12 @@ const getTimestamps = (columns, values, { isInsert }) => {
   values.push(`'${pgTs}'`)
 }
 
-const mapUpdate = (query, type, { isInsert }) => {
+const mapUpdate = (update, type, { isInsert }) => {
   const columns = []
   const values = []
 
-  for (let key in query.update) {
-    const value = query.update[key]
+  for (let key in update) {
+    const value = update[key]
     // FIXME: validations (including authorization)
     // if (!type.writable.includes(key)) {
     //   throw new Error(`Cannot write to ${key} on ${query.action}`)
