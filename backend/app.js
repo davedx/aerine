@@ -136,36 +136,29 @@ const handleRead = async (pool, user, query, response) => {
   return true
 }
 
-const handleDelete = async (pool, user, query, response) => {
-  console.log('handleDelete: ', query)
-  try {
-    const type = types[query.action]
-    const id = query.id
-
-    if (type.functions && type.functions.delete) {
-      const result = await functions[type.functions.delete](pool, user, query.update, response)
-      if (!result) {
-        return true
-      }
+const runFunctions = async (pool, type, user, query, response) => {
+  if (type.functions && type.functions.update) {
+    const result = await functions[type.functions[query.method]](pool, user, query.update, response)
+    if (!result) {
+      return true
     }
-
-    if (!id) {
-      throw new Error(`Cannot delete if no ID specified`)
+    if (result.update) {
+      query.update = result.update
     }
-
-    const sql = `DELETE FROM ${type.table} WHERE id=${id}`
-    console.log(sql)
-
-    const result = await pool.query(sql)
-
-    await handleRead(pool, user, query.queries, response)
-
-    return true
-  } catch (e) {
-    console.error('Error: ', e)
-    response.body = {
-      error: e.message
+    if (result.id) {
+      query.id = result.id
     }
+    if (result.headers) {
+      response.headers = result.headers
+    }
+  }
+}
+
+const runMutationQuery = async (pool, sql, query) => {
+  console.log(sql)
+  const data = await pool.query(sql)
+  if (data.rowCount !== 1) {
+    throw new Error(`Failed to update ${query.action}`)
   }
 }
 
@@ -173,16 +166,9 @@ const handleUpdate = async (pool, user, query, response) => {
   try {
     const type = types[query.action]
 
-    if (type.functions && type.functions.update) {
-      const result = await functions[type.functions.update](pool, user, query.update, response)
-      if (!result) {
-        return true
-      }
-      query.update = result.update
-      query.id = result.id
-      if (result.headers) {
-        response.headers = result.headers
-      }
+    const done = await runFunctions(pool, type, user, query, response)
+    if (done) {
+      return true
     }
 
     if (!query.id) {
@@ -196,12 +182,36 @@ const handleUpdate = async (pool, user, query, response) => {
     })
 
     const sql = `UPDATE ${type.table} SET ${set.join(', ')} WHERE id=${query.id}`
-    console.log(sql)
 
-    const data = await pool.query(sql)
-    if (data.rowCount !== 1) {
-      throw new Error(`Failed to update ${query.action}`)
+    await runMutationQuery(pool, sql, query)
+
+    await handleRead(pool, user, query.queries, response)
+
+    return true
+  } catch (e) {
+    console.error('Error: ', e)
+    response.body = {
+      error: e.message
     }
+  }
+}
+
+const handleDelete = async (pool, user, query, response) => {
+  try {
+    const type = types[query.action]
+
+    const done = await runFunctions(pool, type, user, query, response)
+    if (done) {
+      return true
+    }
+
+    if (!query.id) {
+      throw new Error(`Cannot delete if no ID specified`)
+    }
+
+    const sql = `DELETE FROM ${type.table} WHERE id=${query.id}`
+
+    await runMutationQuery(pool, sql, query)
 
     await handleRead(pool, user, query.queries, response)
 
@@ -215,18 +225,14 @@ const handleUpdate = async (pool, user, query, response) => {
 }
 
 const handleCreate = async (pool, user, query, response) => {
-
   // TODO: validation
   // TODO: nested inserts
   try {
     const type = types[query.action]
 
-    if (type.functions && type.functions.create) {
-      const result = await functions[type.functions.create](pool, user, query.update, response)
-      if (!result) {
-        return true
-      }
-      query.update = result
+    const done = await runFunctions(pool, type, user, query, response)
+    if (done) {
+      return true
     }
 
     const { columns, values } = mapUpdate(query.update, type, { isInsert: true })
@@ -240,12 +246,7 @@ const handleCreate = async (pool, user, query, response) => {
 
     const sql = `INSERT INTO ${type.table} (${insertedColumns}) VALUES (${values.join(', ')})`
 
-    console.log(sql)
-
-    const data = await pool.query(sql)
-    if (data.rowCount !== 1) {
-      throw new Error(`Failed to insert new ${query.action}`)
-    }
+    await runMutationQuery(pool, sql, query)
 
     await handleRead(pool, user, query.queries, response)
 

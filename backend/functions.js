@@ -6,11 +6,12 @@ const { getTimestamps } = require('./db')
 const createUser = async (pool, currentUser, user, response) => {
   const passwordHash = await bcrypt.hash(user.password, 10)
 
-  const newUser = {
-    ...user,
-    password: passwordHash
+  return {
+    update:{
+      ...user,
+      password: passwordHash
+    }
   }
-  return newUser
 }
 
 const loginUser = async (pool, currentUser, user, response) => {
@@ -38,13 +39,6 @@ const loginUser = async (pool, currentUser, user, response) => {
       },
       id: foundUser.id
     }
-
-    // const result = await pool.query(`UPDATE users SET token='${newToken}' WHERE id=${foundUser.id}`)
-    // if (result.rowCount !== 1) {
-    //   throw new Error(`Failed to login, please try again later.`)
-    // }
-    // //console.log('token result: ', result)
-    // return {event: 'LOGIN_USER', status: 'OK', token: newToken}
   } else {
     // TODO: make configurable if want to just say 'invalid login' instead
     throw new Error(`Incorrect password.`)

@@ -49,7 +49,7 @@ const processNodes = (node, data) => {
       }
     } else {
       if (node.innerHTML.indexOf('{{') !== -1) {
-        // FIXME
+        // FIXME - don't hardcore 'currentUser'!
         node.innerHTML = replaceTemplate(node.innerHTML, 'currentUser', data.currentUser)
       }
     }
