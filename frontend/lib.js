@@ -47,7 +47,12 @@ const renderTemplate = (context) => {
 }
 
 async function create(config) {
-  const template = document.getElementById(config.template)
+  let template
+  if (typeof config.template === 'string') {
+    template = document.getElementById(config.template)
+  } else {
+    template = config.template
+  }
   const queriesJson = template.getAttribute('data')
   const queries = JSON.parse(queriesJson)
   //console.log('template queries: ', json)

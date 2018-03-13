@@ -18,6 +18,19 @@ const maybeRedirect = (response, onSuccessUrl) => {
   return false
 }
 
+const linkClicked = (e, context) => {
+  e.preventDefault()
+  const href = e.target.attributes['href'].value
+  if (href.indexOf('http') !== 0) {
+    // local URL: default use router
+    const match = href.match(/([^/]+)\.html/)
+    if (match) {
+      const name = match[1]
+      showView(name)
+    }
+  }
+}
+
 const formSubmitted = async (e, context) => {
   e.preventDefault()
 //  console.log('form submitted: ', e)
@@ -88,6 +101,9 @@ const findActionsInNodes = (node, context) => {
       node.addEventListener('submit', (e) => formSubmitted(e, context), false)
     }
 //    findReferencesInFor(node, node.getAttribute('t-for'), refs)
+  } else if (attrs['href']) {
+    console.log('found hyperlink: ', node)
+    node.addEventListener('click', (e) => linkClicked(e, context), false)
   }
   const children = node.content ? node.content.children : node.children
   for (let i = 0; i < children.length; i++) {

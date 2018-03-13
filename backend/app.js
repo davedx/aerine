@@ -20,7 +20,7 @@ const app = new Koa()
 app.use(bodyParser({enableTypes: ['text', 'json']}))
 app.use(koaStatic('./frontend/'));
 
-const { types } = require('./config')
+const { types } = require('./solnet/config')
 
 const init = async () => {
   const pool = connectDb()

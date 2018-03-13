@@ -7,7 +7,7 @@ const createUser = async (pool, currentUser, user, response) => {
   const passwordHash = await bcrypt.hash(user.password, 10)
 
   return {
-    update:{
+    update: {
       ...user,
       password: passwordHash
     }

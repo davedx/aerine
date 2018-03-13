@@ -1,0 +1,31 @@
+<template id='App'>
+  <div>
+    <h3>Navigation: <a href='timeline.html'>Timeline</a></h3>
+    <p>Welcome to Solnet</p>
+
+    <form action='user' method='update' onSuccessUrl='timeline'>
+      <input name='email' placeholder='user@gmail.com'>
+      <input type='password' name='password' placeholder='Password'>
+      <button type='submit'>Login</button>
+    </form>
+
+    <form action='user' method='create'>
+      <input name='email' placeholder='user@gmail.com'>
+      <input type='password' name='password' placeholder='Password'>
+      <input name='first_name' placeholder='Dave'>
+      <input name='surname' placeholder='Smith'>
+      <button type='submit'>Sign up</button>
+    </form>
+
+  </div>
+</template>
+<script>
+  /*
+const App = {
+  template: 'App',
+  mount: 'app'
+}
+
+window.onload = create(App)
+*/
+</script>
