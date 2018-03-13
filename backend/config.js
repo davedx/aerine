@@ -29,4 +29,10 @@ const types = {
   }
 }
 
-module.exports = { types }
+// ROUTING!
+const views = {
+  index: {},
+  timeline: {}
+}
+
+module.exports = { types, views }
