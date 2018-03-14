@@ -9,6 +9,7 @@
     "koa-bodyparser": "^4.2.0",
     "koa-static": "^4.0.2",
     "lodash": "^4.17.5",
+    "node-sass": "^4.7.2",
     "nodemon": "^1.17.1",
     "pg": "^7.4.1",
     "uuid": "^3.2.1"

@@ -49,6 +49,7 @@ const renderTemplate = (context) => {
 async function create(config) {
   let template
   if (typeof config.template === 'string') {
+    throw new Error('Not supported')
     template = document.getElementById(config.template)
   } else {
     template = config.template
@@ -71,5 +72,8 @@ async function create(config) {
 
   // put it in the dom
   const app = document.getElementById(config.mount)
+  if (config.style) {
+    injectStyles(config.style, document.head)
+  }
   renderTemplate({ app, template, data, queries })
 }

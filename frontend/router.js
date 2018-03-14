@@ -17,7 +17,11 @@ const showView = async (name) => {
   state.view = document.createElement('div')
   state.view.innerHTML = html
 
-  create({template: state.view.getElementsByTagName('template')[0], mount: 'app'})
+  const templateTags = state.view.getElementsByTagName('template')
+  const styleTags = state.view.getElementsByTagName('style')
+  const templateTag = templateTags[0]
+  const styleTag = styleTags.length > 0 ? styleTags[0] : null
+  create({template: templateTag, style: styleTag, mount: 'app'})
 }
 
 const createApp = (views) => {

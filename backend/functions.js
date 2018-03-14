@@ -33,6 +33,8 @@ const loginUser = async (pool, currentUser, user, response) => {
       'X-token': newToken
     }
 
+    response.body = {status: 'OK'}
+
     return {
       update: {
         token: newToken
@@ -55,9 +57,7 @@ const logoutUser = async (pool, currentUser, user, response) => {
   response.headers = {
     'X-token': ''
   }
-  if (response.body.currentUser) {
-    delete response.body.currentUser
-  }
+  response.body = {status: 'OK'}
   return
 }
 

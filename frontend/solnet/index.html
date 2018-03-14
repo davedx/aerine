@@ -1,31 +1,151 @@
 <template id='App'>
-  <div>
-    <h3>Navigation: <a href='timeline.html'>Timeline</a></h3>
-    <p>Welcome to Solnet</p>
-
-    <form action='user' method='update' onSuccessUrl='timeline'>
-      <input name='email' placeholder='user@gmail.com'>
-      <input type='password' name='password' placeholder='Password'>
-      <button type='submit'>Login</button>
-    </form>
-
-    <form action='user' method='create'>
-      <input name='email' placeholder='user@gmail.com'>
-      <input type='password' name='password' placeholder='Password'>
-      <input name='first_name' placeholder='Dave'>
-      <input name='surname' placeholder='Smith'>
-      <button type='submit'>Sign up</button>
-    </form>
-
+  <div class='index'>
+    <div class='top'>
+      <div class='sn-logo' @click='goHome'>
+        Solnet
+      </div>
+      <div class='top-login'>
+        <form action='user' method='update' onSuccessUrl='timeline'>
+          <input class='input input-inline input-small' placeholder='Email' name='email'>
+          <input class='input input-inline input-small' type='password' placeholder='Password' name='password'>
+          <button type='submit' class='button button-inline button-small'>Log in</button>
+        </form>
+      </div>
+    </div>
+    <div class='intro'>
+      <h1>Welcome to Solnet!</h1>
+      <h2>The multiplanetary social network</h2>
+      <div class='planets'>
+        <div class='earth'></div>
+        <div class='mars'></div>
+      </div>
+    </div>
+    <div class='create'>
+      <h1>Create an account</h1>
+      <h3>It's free and your data is yours</h3>
+      <div class='signup-form'>
+        <form action='user' method='create'>
+          <div>
+            <input class='input input-half' placeholder='First name' name='first_name'>
+            <input class='input input-half pr' placeholder='Surname' name='surname'>
+          </div>
+          <input class='input input-full' type='email' placeholder='Email address' name='email'>
+          <input class='input input-full' type='password' placeholder='New password' name='password'>
+          <button type='submit' class='button button-half'>Create a account</button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
-<script>
-  /*
-const App = {
-  template: 'App',
-  mount: 'app'
+<style lang="css">
+.planets {
+  margin-top: 60px;
 }
 
-window.onload = create(App)
-*/
+.planets .earth {
+    width: 128px;
+    height: 128px;
+    margin: 0 20px;
+    display: inline-block;
+    background-size: cover;
+    background-image: url('solnet/images/earth-trans.png')
+  }
+
+.planets .mars {
+    width: 118px;
+    height: 118px;
+    margin: 5px 20px;
+    display: inline-block;
+    background-size: cover;
+    background-image: url('solnet/images/mars-trans.png')
+  }
+
+.index {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.top {
+  height: 100px;
+}
+.sn-logo {
+  color: #fff;
+  width: 345px;
+  font-size: 30px;
+  display: inline-block;
+}
+.top-login {
+  display: inline-block;
+  float: right;
+  margin-right: 130px;
+}
+.top-login
+  input, button {
+    margin-left: 5px;
+  }
+
+h1 {
+  color: #D8D8D8;
+  font-size: 36px;
+}
+h2, h3 {
+  color: #979797;
+}
+.signup-form {
+  width: 80%;
+}
+.input {
+  border: 0;
+  color: #2b2b2b;
+  font-size: 18px;
+  padding: 8px 10px;
+  margin: 5px 0;
+}
+.pr {
+  float: right;
+}
+.input-inline {
+  display: inline;
+}
+.input-small {
+  font-size: 14px;
+  padding: 4px 5px;
+}
+.input-half {
+  display: inline-block;
+  width: 49%;
+}
+.input-full {
+  width: 100%;
+}
+.button {
+  font-size: 18px;
+  background-color: #fffa6e;
+  border: 0;
+  padding: 8px 20px;
+  margin: 18px 0;
+  color: #2b2b2b;
+}
+.button-small {
+  font-size: 14px;
+  padding: 4px 10px;
+  margin: 0;
+}
+.create {
+  width: 49%;
+  display: inline-block;
+  font-weight: normal;
+}
+.intro {
+  vertical-align: top;
+  width: 50%;
+  display: inline-block;
+  font-weight: normal;
+}
+.intro
+  h1 {
+    margin-bottom: 21px;
+  }
+
+</style>
+<script>
 </script>
