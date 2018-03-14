@@ -11,7 +11,7 @@ const mergeContext = (context, data) => {
 const maybeRedirect = (response, onSuccessUrl) => {
   if (response.status === 'OK') {
     if (onSuccessUrl) {
-      window.location = onSuccessUrl.value + '.html'
+      showView(onSuccessUrl.value)
       return true
     }
   }
@@ -97,7 +97,7 @@ const findActionsInNodes = (node, context) => {
     const method = attrs['method'].value
     const action = attrs['action'].value
     if (['create', 'update', 'delete'].includes(method)) {
-      console.log('form: ', method, action)
+      console.log('action found: ', method, action)
       node.addEventListener('submit', (e) => formSubmitted(e, context), false)
     }
 //    findReferencesInFor(node, node.getAttribute('t-for'), refs)

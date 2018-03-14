@@ -47,6 +47,10 @@ const loginUser = async (pool, currentUser, user, response) => {
 
 const logoutUser = async (pool, currentUser, user, response) => {
   // this time we do use currentUser! :)
+  if (!currentUser) {
+    response.body = {status: 'OK'}
+    return
+  }
   const result = await pool.query(`UPDATE users SET token='' WHERE id=${currentUser.id}`)
   response.headers = {
     'X-token': ''
