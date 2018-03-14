@@ -9,6 +9,7 @@ const mergeContext = (context, data) => {
 }
 
 const maybeRedirect = (response, onSuccessUrl) => {
+  // TODO: use HTTP status code instead. If 200, redirect.
   if (response.status === 'OK') {
     if (onSuccessUrl) {
       showView(onSuccessUrl.value)

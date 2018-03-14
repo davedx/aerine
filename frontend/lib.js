@@ -73,7 +73,7 @@ async function create(config) {
   // put it in the dom
   const app = document.getElementById(config.mount)
   if (config.style) {
-    injectStyles(config.style, document.head)
+    injectStyles(config.name, config.style, document.head)
   }
   renderTemplate({ app, template, data, queries })
 }

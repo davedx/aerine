@@ -9,21 +9,27 @@ const compileStyles = (styleNode) => {
   return styleNode
 }
 
-// FIXME: stop appending same node twice (after navigation)
-const injectStyles = (styleNode, domRoot) => {
+const injectStyles = (name, styleNode, styleRoot) => {
+  const tagId = `styles-${name}`
+  // prevent adding it twice
+  if (document.getElementById(tagId)) {
+    return
+  }
+  styleNode.id = tagId
+
   const attrs = styleNode.attributes
   let lang = 'css'
   if (attrs['lang']) {
     lang = attrs['lang'].value
   }
-  console.log('injectStyles: ', styleNode, domRoot, lang)
+  console.log('injectStyles: ', styleNode, styleRoot, lang)
   switch (lang) {
     case 'css':
-      domRoot.appendChild(styleNode)
+      styleRoot.appendChild(styleNode)
       break
     case 'scss':
       const css = compileStyles(styleNode)
-      domRoot.appendChild(css)
+      styleRoot.appendChild(css)
       break
     default: console.error(`Unsupported style language: ${lang}`)
   }
