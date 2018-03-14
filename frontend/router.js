@@ -22,6 +22,9 @@ const showView = async (name) => {
   const templateTag = templateTags[0]
   const styleTag = styleTags.length > 0 ? styleTags[0] : null
   create({template: templateTag, style: styleTag, mount: 'app', name: name})
+
+  // TODO: get history API working
+  //history.pushState({}, '', `${name}.html`)
 }
 
 const createApp = (views) => {
