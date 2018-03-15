@@ -21,7 +21,7 @@ const loginUser = async (pool, currentUser, user, response) => {
   const data = await pool.query(`SELECT id, password FROM users WHERE email='${email}'`)
   const foundUser = data.rows[0]
   if (!foundUser) {
-    throw new Error(`Invalid user.`)
+    throw {email: ['Invalid user.']}
   }
 
   const matches = await bcrypt.compare(password, foundUser.password)
@@ -43,7 +43,7 @@ const loginUser = async (pool, currentUser, user, response) => {
     }
   } else {
     // TODO: make configurable if want to just say 'invalid login' instead
-    throw new Error(`Incorrect password.`)
+    throw {password: [`Incorrect password.`]}
   }
 }
 

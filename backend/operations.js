@@ -220,8 +220,8 @@ const handleCreate = async (context) => {
     }
 
     const sql = `INSERT INTO ${type.table} (${columns.join(', ')}) VALUES (${values.join(', ')})`
-console.log(sql)
-    //await runMutationQuery(context.pool, sql, request)
+
+    await runMutationQuery(context.pool, sql, request)
 
     await handleRead({
       ...context,

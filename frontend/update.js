@@ -8,13 +8,10 @@ const mergeContext = (context, data) => {
   }
 }
 
-const maybeRedirect = (response, onSuccessUrl) => {
-  // TODO: use HTTP status code instead. If 200, redirect.
-  if (response.status === 'OK') {
-    if (onSuccessUrl) {
-      showView(onSuccessUrl.value)
-      return true
-    }
+const maybeRedirect = (onSuccessUrl) => {
+  if (onSuccessUrl) {
+    showView(onSuccessUrl.value)
+    return true
   }
   return false
 }
@@ -30,6 +27,17 @@ const linkClicked = (e, context) => {
       showView(name)
     }
   }
+}
+
+const getErrorElement = (el, errElId) => {
+  // if no error div for element, make one
+  let errEl = document.getElementById(errElId)
+  if (!errEl) {
+    errEl = document.createElement('div')
+    errEl.id = errElId
+    el.parentElement.appendChild(errEl)
+  }
+  return errEl
 }
 
 const formSubmitted = async (e, context) => {
@@ -58,7 +66,7 @@ const formSubmitted = async (e, context) => {
     }, { contentType: 'application/json' })
     console.log(response)
 
-    if (maybeRedirect(response, onSuccessUrl)) {
+    if (maybeRedirect(onSuccessUrl)) {
       return
     }
 
@@ -66,23 +74,18 @@ const formSubmitted = async (e, context) => {
     renderTemplate(newContext)
   } catch (e) {
     console.error('error: ', e)
+
     for (let i = 0; i < elements.length; i++) {
       const el = elements[i]
+      const errElId = `${action}-${method}-${el.name}`
+      const errEl = getErrorElement(el, errElId)
+
       if (e.error[el.name]) {
         console.log('found errs: ', e.error[el.name])
         const errorText = e.error[el.name].join(', ')
-
-        // if no error div for element, make one
-        const errElId = `${action}-${method}-${el.name}`
-        let errEl = document.getElementById(errElId)
-        if (!errEl) {
-          errEl = document.createElement('div')
-          errEl.id = errElId
-          console.log('made new node... appending to', el.parentElement)
-          el.parentElement.appendChild(errEl)
-        }
         errEl.innerHTML = errorText
-        console.log(errEl)
+      } else {
+        errEl.innerHTML = ''
       }
     }
   }
@@ -101,7 +104,7 @@ const deleteClicked = async (e, id, context) => {
   }, { contentType: 'application/json' })
   console.log(response)
 
-  if (maybeRedirect(response, onSuccessUrl)) {
+  if (maybeRedirect(onSuccessUrl)) {
     return
   }
 

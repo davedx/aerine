@@ -70,7 +70,6 @@ const patterns = {
 
 const addValidations = (type, key, value, errors) => {
   const property = type.properties.find(p => p.name === key)
-  errors[key] = errors[key] || []
 
   console.log(property)
 
@@ -79,6 +78,7 @@ const addValidations = (type, key, value, errors) => {
   }
   if (property.minLen) {
     if (value.length < property.minLen) {
+      errors[key] = errors[key] || []
       errors[key].push(`Please enter a value at least ${property.minLen} characters long.`)
     }
   }
@@ -89,6 +89,7 @@ const addValidations = (type, key, value, errors) => {
     }
     const expr = patterns[property.pattern]
     if (!value.match(expr)) {
+      errors[key] = errors[key] || []
       errors[key].push(`Please enter a valid ${property.pattern}.`)
     }
   }
