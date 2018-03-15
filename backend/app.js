@@ -1,3 +1,5 @@
+const _ = require('lodash')
+const fs = require('fs')
 const Koa = require('koa')
 const bodyParser = require('koa-bodyparser')
 const koaStatic = require('koa-static')
@@ -18,8 +20,8 @@ const { getSchemaForTable, updateSchemaForTable } = require('./schema')
 
 const app = new Koa()
 app.use(bodyParser({enableTypes: ['text', 'json']}))
-app.use(koaStatic('./frontend/'));
-app.use(koaStatic('./shared/'));
+//app.use(koaStatic('./frontend/'));
+//app.use(koaStatic('./shared/'));
 
 const { types } = require('./solnet/config')
 
@@ -79,6 +81,20 @@ const init = async () => {
       }
 
       ctx.body = response.body
+    } else {
+      const parts = ctx.request.path.split('/')
+      const filename = _.last(parts)
+      let file
+      if (filename.indexOf('js') !== -1 || parts.length > 2) {
+        file = fs.readFileSync(`./frontend${ctx.request.path}`, 'utf-8')
+      } else {
+        file = fs.readFileSync('./frontend/index.html', 'utf-8')
+        const key = _.first(filename.split('.'))
+        file = file.replace(`const _STARTUP_ = ''`, `const _STARTUP_ = '${key}'`)
+      }
+      // TODO: stream it somehow
+      ctx.set('Content-type', 'text/html')
+      ctx.body = file
     }
   })
 

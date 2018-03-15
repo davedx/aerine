@@ -24,12 +24,15 @@ const showView = async (name) => {
   create({template: templateTag, style: styleTag, mount: 'app', name: name})
 
   // TODO: get history API working
-  //history.pushState({}, '', `${name}.html`)
+  history.pushState({}, '', `${name}.html`)
 }
 
-const createApp = (views) => {
+const createApp = (views, startup) => {
   state.views = views
   console.log('views: ', state.views)
+  if (startup) {
+    return showView(startup)
+  }
   for (let key in views) {
     if (key === 'index') {
       showView(key)

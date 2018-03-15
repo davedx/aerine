@@ -3,7 +3,11 @@ const uuidv4 = require('uuid/v4')
 const { getTimestamps } = require('./db')
 
 // const minLength = 6
+// TODO: make this log them in too? what should default be...
 const createUser = async (pool, currentUser, user, response) => {
+  if (user.password.length < 6) {
+    throw {password: [`Password too short (must be at least 6 characters).`]}
+  }
   const passwordHash = await bcrypt.hash(user.password, 10)
 
   return {

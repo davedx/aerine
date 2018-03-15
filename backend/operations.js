@@ -58,12 +58,7 @@ const handleRead = async (context) => {
 
     //console.log('tuples: ', tuples)
 
-    const filters = []
-    if (context.user) {
-      filters.push(`p.user_id=${context.user.id}`)
-    }
-
-    const sql = buildQuery(context.types, tuples, filters)
+    const sql = buildQuery(context.types, context.user, tuples)
     console.log('sql: ', sql)
 
     //const sql = `SELECT * FROM ${types[type].table} ${filter}`

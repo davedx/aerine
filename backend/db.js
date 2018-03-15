@@ -14,7 +14,14 @@ const pgTypes = {
   integer: 'bigint'
 }
 
-const buildQuery = (types, tuples, filters) => {
+const buildFilter = (filters) => {
+  if (filters.length === 0) {
+    return ''
+  }
+  return ` WHERE ${filters.join(' AND ')}`
+}
+
+const buildQuery = (types, currentUser, tuples) => {
   let sql = 'SELECT'
   let tables = []
   let columns = []
@@ -26,12 +33,23 @@ const buildQuery = (types, tuples, filters) => {
       columns.push(`${table[0]}.${tuples[i].properties[k]}`)
     }
   }
+
+  const filters = []
+  if (currentUser && tuples[0].type !== 'user') {
+    filters.push(`${tables[0][0]}.user_id=${currentUser.id}`)
+  }
+
   // FIXME - loop 2 at a time?
-  let t1 = types[tuples[0].type]
-  let t2 = types[tuples[1].type]
-  // JOIN
-  filters.push(`${t2.table[0]}.id=${t1.table[0]}.${t1.relationFrom[0]}`)
-  sql = `SELECT ${columns.join(', ')} FROM ${tables.join(', ')} WHERE ${filters.join(' AND ')}`
+  if (tuples.length > 1) {
+    let t1 = types[tuples[0].type]
+    let t2 = types[tuples[1].type]
+    // JOIN
+    filters.push(`${t2.table[0]}.id=${t1.table[0]}.${t1.relationFrom[0]}`)
+    sql = `SELECT ${columns.join(', ')} FROM ${tables.join(', ')}${buildFilter(filters)}`
+  } else {
+    sql = `SELECT ${columns.join(', ')} FROM ${tables.join(', ')}${buildFilter(filters)}`
+    console.log(sql)
+  }
   return sql
 }
 
