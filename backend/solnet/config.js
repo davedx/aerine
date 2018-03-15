@@ -16,7 +16,7 @@ const types = {
     properties: [
       { name: 'first_name', type: 'string', minLen: 2 },
       { name: 'surname', type: 'string', minLen: 2 },
-      { name: 'email', type: 'string' },
+      { name: 'email', type: 'string', pattern: 'email' },
       { name: 'token', type: 'string' },
       { name: 'password', type: 'string' },
       { name: 'bio', type: 'string' },

@@ -64,17 +64,32 @@ const getTimestamps = (columns, values, { isInsert }) => {
   values.push(`'${pgTs}'`)
 }
 
+const patterns = {
+  email: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+}
+
 const addValidations = (type, key, value, errors) => {
   const property = type.properties.find(p => p.name === key)
+  errors[key] = errors[key] || []
+
   console.log(property)
+
   if (!property) {
     throw new Error(`Cannot write ${key} to ${type.table}`)
   }
   if (property.minLen) {
     if (value.length < property.minLen) {
-      console.log('too short!')
-      errors[key] = errors[key] || []
       errors[key].push(`Please enter a value at least ${property.minLen} characters long.`)
+    }
+  }
+  if (property.pattern) {
+    if (!patterns[property.pattern]) {
+      // TODO: scan for invalid configuration at startup
+      throw new Error(`Invalid pattern for ${key}: ${property.pattern}`)
+    }
+    const expr = patterns[property.pattern]
+    if (!value.match(expr)) {
+      errors[key].push(`Please enter a valid ${property.pattern}.`)
     }
   }
 }

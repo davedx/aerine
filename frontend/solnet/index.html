@@ -26,11 +26,19 @@
       <div class='signup-form'>
         <form action='user' method='create'>
           <div>
-            <input class='input input-half pl' placeholder='First name' name='first_name'>
-            <input class='input input-half pr' placeholder='Surname' name='surname'>
+            <div class='row-50 pl'>
+              <input class='input input-full' placeholder='First name' name='first_name'>
+            </div>
+            <div class='row-50 pr'>
+              <input class='input input-full' placeholder='Surname' name='surname'>
+            </div>
           </div>
-          <input class='input input-full' type='email' placeholder='Email address' name='email'>
-          <input class='input input-full' type='password' placeholder='New password' name='password'>
+          <div>
+            <input class='input input-full' type='email' placeholder='Email address' name='email'>
+          </div>
+          <div>
+            <input class='input input-full' type='password' placeholder='New password' name='password'>
+          </div>
           <button type='submit' class='button button-half'>Create a account</button>
         </form>
       </div>

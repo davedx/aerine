@@ -44,7 +44,7 @@ const formSubmitted = async (e, context) => {
   let update = {}
   for (let i = 0; i < elements.length; i++) {
     const el = elements[i]
-    if (['text', 'textarea', 'password'].includes(el.type)) {
+    if (['text', 'textarea', 'email', 'password'].includes(el.type)) {
       update[el.name] = el.value
     }
   }
@@ -66,6 +66,25 @@ const formSubmitted = async (e, context) => {
     renderTemplate(newContext)
   } catch (e) {
     console.error('error: ', e)
+    for (let i = 0; i < elements.length; i++) {
+      const el = elements[i]
+      if (e.error[el.name]) {
+        console.log('found errs: ', e.error[el.name])
+        const errorText = e.error[el.name].join(', ')
+
+        // if no error div for element, make one
+        const errElId = `${action}-${method}-${el.name}`
+        let errEl = document.getElementById(errElId)
+        if (!errEl) {
+          errEl = document.createElement('div')
+          errEl.id = errElId
+          console.log('made new node... appending to', el.parentElement)
+          el.parentElement.appendChild(errEl)
+        }
+        errEl.innerHTML = errorText
+        console.log(errEl)
+      }
+    }
   }
 }
 
