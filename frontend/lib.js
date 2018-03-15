@@ -11,11 +11,15 @@ async function http(body, { contentType, method }) {
     headers['X-token'] = token
   }
 
+  let status
+
   return await fetch('/data', {
     body: JSON.stringify(body),
     headers: new Headers(headers),
     method: method || 'POST'
-  }).then(function(response) {
+  }).then(response => {
+
+    status = response.status
     if (response.headers.has('x-token')) {
       const token = response.headers.get('x-token')
       if (token) {
@@ -26,7 +30,10 @@ async function http(body, { contentType, method }) {
     }
 
     return response.json()
-  }).then(function(json) {
+  }).then(json => {
+    if (status !== 200) {
+      throw json
+    }
     return json
   })
 }
@@ -47,13 +54,7 @@ const renderTemplate = (context) => {
 }
 
 async function create(config) {
-  let template
-  if (typeof config.template === 'string') {
-    throw new Error('Not supported')
-    template = document.getElementById(config.template)
-  } else {
-    template = config.template
-  }
+  const template = config.template
   const queriesJson = template.getAttribute('data')
   const queries = JSON.parse(queriesJson)
   //console.log('template queries: ', json)

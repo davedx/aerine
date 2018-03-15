@@ -64,16 +64,32 @@ const getTimestamps = (columns, values, { isInsert }) => {
   values.push(`'${pgTs}'`)
 }
 
+const addValidations = (type, key, value, errors) => {
+  const property = type.properties.find(p => p.name === key)
+  console.log(property)
+  if (!property) {
+    throw new Error(`Cannot write ${key} to ${type.table}`)
+  }
+  if (property.minLen) {
+    if (value.length < property.minLen) {
+      console.log('too short!')
+      errors[key] = errors[key] || []
+      errors[key].push(`Please enter a value at least ${property.minLen} characters long.`)
+    }
+  }
+}
+
 const mapUpdate = (update, type, { isInsert }) => {
   const columns = []
   const values = []
+  const errors = {}
 
   for (let key in update) {
     const value = update[key]
-    // FIXME: validations (including authorization)
-    // if (!type.writable.includes(key)) {
-    //   throw new Error(`Cannot write to ${key} on ${query.action}`)
-    // }
+
+    // FIXME: authorization!
+    addValidations(type, key, value, errors)
+
     columns.push(key)
     let val
     if (typeof value !== 'number') {
@@ -85,6 +101,10 @@ const mapUpdate = (update, type, { isInsert }) => {
   }
 
   getTimestamps(columns, values, { isInsert })
+
+  if (Object.keys(errors).length > 0) {
+    throw errors
+  }
 
   return { columns, values }
 }

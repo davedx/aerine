@@ -19,6 +19,7 @@ const { getSchemaForTable, updateSchemaForTable } = require('./schema')
 const app = new Koa()
 app.use(bodyParser({enableTypes: ['text', 'json']}))
 app.use(koaStatic('./frontend/'));
+app.use(koaStatic('./shared/'));
 
 const { types } = require('./solnet/config')
 
@@ -49,21 +50,22 @@ const init = async () => {
       }
 
       console.log('request: ', request)
+      let status
 
       if (request.action && request.method) {
         switch (request.method) {
           case 'create':
-            await handleCreate({ pool, types, user, request, response })
+            status = await handleCreate({ pool, types, user, request, response })
             break
           case 'delete':
-            await handleDelete({ pool, types, user, request, response })
+            status = await handleDelete({ pool, types, user, request, response })
             break
           case 'update':
-            await handleUpdate({ pool, types, user, request, response })
+            status = await handleUpdate({ pool, types, user, request, response })
             break
         }
       } else {
-        await handleRead({ pool, types, user, request, response })
+        status = await handleRead({ pool, types, user, request, response })
       }
 
       if (response.headers) {
@@ -71,6 +73,11 @@ const init = async () => {
           ctx.set(key, response.headers[key])
         }
       }
+
+      if (status) {
+        ctx.status = status
+      }
+
       ctx.body = response.body
     }
   })

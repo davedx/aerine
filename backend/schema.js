@@ -15,20 +15,12 @@ const updateSchemaForTable = async (pool, type) => {
 
   // add missing columns
   for (let i = 0; i < type.properties.length; i++) {
-    const name = _.keys(type.properties[i])[0]
-    const def = type.properties[i][name]
+    const name = type.properties[i].name
+    const nativeType = type.properties[i].type
     const exists = schema.find(row => row.column_name === name)
     if (!exists) {
       console.error(`! Cannot find column: ${name} in table ${type.table}`)
       console.log('Adding new column to database...')
-      let nativeType
-      let defs
-      if (typeof def === 'string') {
-        nativeType = def
-      } else {
-        nativeType = def.type
-        console.log('extra stuff: ', def)
-      }
 
       const dataType = pgTypes[nativeType]
       // TODO: foreign keys

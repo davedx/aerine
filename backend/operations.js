@@ -89,12 +89,12 @@ const handleRead = async (context) => {
       })
     } catch (e) {
       response.body[key] = {
-        error: e.message
+        error: e.message || e
       }
     }
   }
 
-  return true
+  return 200
 }
 
 const runFunctions = async (context, type) => {
@@ -155,12 +155,13 @@ const handleUpdate = async (context) => {
       request: request.queries
     })
 
-    return true
+    return 200
   } catch (e) {
     console.error('Error: ', e)
     response.body = {
-      error: e.message
+      error: e.message || e
     }
+    return 400
   }
 }
 
@@ -188,12 +189,13 @@ const handleDelete = async (context) => {
       request: request.queries
     })
 
-    return true
+    return 200
   } catch (e) {
     console.error('Error: ', e)
     response.body = {
-      error: e.message
+      error: e.message || e
     }
+    return 400
   }
 }
 
@@ -218,20 +220,21 @@ const handleCreate = async (context) => {
     }
 
     const sql = `INSERT INTO ${type.table} (${columns.join(', ')}) VALUES (${values.join(', ')})`
-
-    await runMutationQuery(context.pool, sql, request)
+console.log(sql)
+    //await runMutationQuery(context.pool, sql, request)
 
     await handleRead({
       ...context,
       request: request.queries
     })
 
-    return true
+    return 200
   } catch (e) {
     console.error('Error: ', e)
     response.body = {
-      error: e.message
+      error: e.message || e
     }
+    return 400
   }
 }
 

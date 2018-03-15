@@ -49,20 +49,24 @@ const formSubmitted = async (e, context) => {
     }
   }
   console.log(update)
-  const response = await http({
-    action,
-    method,
-    update,
-    queries: context.queries
-  }, { contentType: 'application/json' })
-  console.log(response)
+  try {
+    const response = await http({
+      action,
+      method,
+      update,
+      queries: context.queries
+    }, { contentType: 'application/json' })
+    console.log(response)
 
-  if (maybeRedirect(response, onSuccessUrl)) {
-    return
+    if (maybeRedirect(response, onSuccessUrl)) {
+      return
+    }
+
+    const newContext = mergeContext(context, response)
+    renderTemplate(newContext)
+  } catch (e) {
+    console.error('error: ', e)
   }
-
-  const newContext = mergeContext(context, response)
-  renderTemplate(newContext)
 }
 
 const deleteClicked = async (e, id, context) => {
