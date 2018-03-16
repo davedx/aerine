@@ -128,7 +128,7 @@ const handleUpdate = async (context) => {
 
     const done = await runFunctions(context, type)
     if (done) {
-      return true
+      return 200
     }
 
     if (!request.id) {
@@ -168,7 +168,7 @@ const handleDelete = async (context) => {
 
     const done = await runFunctions(context, type)
     if (done) {
-      return true
+      return 200
     }
 
     if (!request.id) {
@@ -204,7 +204,7 @@ const handleCreate = async (context) => {
 
     const done = await runFunctions(context, type)
     if (done) {
-      return true
+      return 200
     }
 
     const { columns, values } = mapUpdate(request.update, type, { isInsert: true })
@@ -233,10 +233,32 @@ const handleCreate = async (context) => {
   }
 }
 
+const handleCustomMethod = async (context) => {
+  const request = context.request
+  const response = context.response
+  try {
+    const type = context.types[request.action]
+
+    const done = await runFunctions(context, type)
+    if (done) {
+      return 200
+    }
+
+    return 501 // not supported. Could also be 404...
+  } catch (e) {
+    console.error('Error: ', e)
+    response.body = {
+      error: e.message || e
+    }
+    return 400
+  }
+}
+
 module.exports = {
   getAuthenticatedUser,
   handleRead,
   handleCreate,
   handleUpdate,
-  handleDelete
+  handleDelete,
+  handleCustomMethod
 }

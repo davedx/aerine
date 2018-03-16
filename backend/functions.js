@@ -18,6 +18,10 @@ const createUser = async (pool, currentUser, user, response) => {
   }
 }
 
+const addFriend = async (pool, currentUser, request, response) => {
+  console.log('addFriend...', request)
+}
+
 const loginUser = async (pool, currentUser, user, response) => {
   const { email, password } = user
   console.log(`Authenticating user: ${user.email}`)
@@ -65,4 +69,4 @@ const logoutUser = async (pool, currentUser, user, response) => {
   return
 }
 
-module.exports = { createUser, loginUser, logoutUser }
+module.exports = { createUser, loginUser, logoutUser, addFriend }

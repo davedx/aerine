@@ -2,7 +2,7 @@
   <div class='user-control'>
     <div class='status'>Logged in as {{ currentUser.email }}</div>
     <div class='action'>
-      <button action='user' type='delete' onSuccessUrl='index' class='button'>Log out</button>
+      <button action='user' method='delete' onSuccessUrl='index' class='button'>Log out</button>
     </div>
   <div>
     <h1>Timeline</h1>
@@ -10,13 +10,14 @@
     <ul>
       <li t-for="post in posts">
         {{ post.body }} by {{ post.user.first_name }} {{ post.user.surname }}
-        <button action='post' type='delete' class='button'>Delete post</button>
+        <button action='post' method='delete' class='button'>Delete post</button>
       </li>
     </ul>
 
     <ul>
       <li t-for="user in users">
         {{ user.email }}
+        <button action='user' method='add_friend' class='button'>Add friend</button>
       </li>
     </ul>
 

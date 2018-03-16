@@ -25,7 +25,8 @@ const types = {
     functions: {
       update: 'loginUser',
       create: 'createUser',
-      delete: 'logoutUser'
+      delete: 'logoutUser',
+      add_friend: 'addFriend'
     }
   }
 }

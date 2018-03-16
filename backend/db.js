@@ -48,7 +48,6 @@ const buildQuery = (types, currentUser, tuples) => {
     sql = `SELECT ${columns.join(', ')} FROM ${tables.join(', ')}${buildFilter(filters)}`
   } else {
     sql = `SELECT ${columns.join(', ')} FROM ${tables.join(', ')}${buildFilter(filters)}`
-    console.log(sql)
   }
   return sql
 }

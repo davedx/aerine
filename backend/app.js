@@ -9,7 +9,8 @@ const {
   handleRead,
   handleCreate,
   handleUpdate,
-  handleDelete
+  handleDelete,
+  handleCustomMethod
 } = require('./operations')
 
 const {
@@ -65,6 +66,9 @@ const init = async () => {
           case 'update':
             status = await handleUpdate({ pool, types, user, request, response })
             break
+          default:
+            status = await handleCustomMethod({ pool, types, user, request, response })
+            break
         }
       } else {
         status = await handleRead({ pool, types, user, request, response })
@@ -77,6 +81,7 @@ const init = async () => {
       }
 
       if (status) {
+        console.log('status: ', status)
         ctx.status = status
       }
 

@@ -91,14 +91,15 @@ const formSubmitted = async (e, context) => {
   }
 }
 
-const deleteClicked = async (e, id, context) => {
+const onClick = async (e, id, context) => {
   const attrs = e.target.attributes
   const action = attrs['action'].value
+  const method = attrs['method'].value
   const onSuccessUrl = attrs['onsuccessurl']
-  console.log('deleteClicked: ', id)
+  console.log('onClick: ', id)
   const response = await http({
     action,
-    method: 'delete',
+    method: method,
     id,
     queries: context.queries
   }, { contentType: 'application/json' })
@@ -117,9 +118,9 @@ const findActionsInNodes = (node, context) => {
   const attrs = node.attributes
   if (attrs['t-id']) {
     context.__lastId = attrs['t-id'].value
-  } else if (attrs['type'] && attrs['type'].value === 'delete') {
+  } else if (node.nodeName === 'BUTTON' && attrs['method'] && attrs['action']) {
     const id = context.__lastId
-    node.addEventListener('click', (e) => deleteClicked(e, id, context), false)
+    node.addEventListener('click', (e) => onClick(e, id, context), false)
   } else if (attrs['method']) {
     const method = attrs['method'].value
     const action = attrs['action'].value
