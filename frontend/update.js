@@ -52,7 +52,7 @@ const formSubmitted = async (e, context) => {
   let update = {}
   for (let i = 0; i < elements.length; i++) {
     const el = elements[i]
-    if (['text', 'textarea', 'email', 'password'].includes(el.type)) {
+    if (['text', 'textarea', 'email', 'password', 'hidden'].includes(el.type)) {
       update[el.name] = el.value
     }
   }

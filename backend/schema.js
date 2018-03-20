@@ -8,11 +8,16 @@ const getSchemaForTable = async (pool, table) => {
 
 const updateSchemaForTable = async (pool, type) => {
   console.log('Maybe updating ', type.table)
-  const schema = await getSchemaForTable(pool, type.table)
+  if (type.recreate) {
+    console.warn(`! Dropping table ${type.table} because recreate == true`)
+    await pool.query(`DROP TABLE ${type.table}`)
+  }
 
+  const schema = await getSchemaForTable(pool, type.table)
+console.log(schema);
   if (schema.length === 0) {
     console.error(`! Table ${type.table} does not exist, creating`)
-    const sql = `CREATE TABLE ${type.table} ()`
+    const sql = `CREATE TABLE ${type.table} (inserted_at timestamp without time zone, updated_at timestamp without time zone)`
     const result = await pool.query(sql)
   }
   //console.log(schema)

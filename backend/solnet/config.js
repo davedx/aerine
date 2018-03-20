@@ -30,13 +30,14 @@ const types = {
     }
   },
   friend: {
+    //recreate: true,
     table: 'friends',
     properties: [
-      { name: 'user_1_id', type: 'integer' },
-      { name: 'user_2_id', type: 'integer' }
+      { name: 'user_id', type: 'integer' },
+      { name: 'friend_id', type: 'integer' } // TODO: NOT NULL
     ],
-    relationFrom: ['user_1_id', 'user'],
-    relationFrom: ['user_2_id', 'user']
+    relationFrom: ['user_id', 'user'],
+    relationFrom: ['friend_id', 'user']
   }
 }
 

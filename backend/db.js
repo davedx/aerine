@@ -118,7 +118,13 @@ const mapUpdate = (update, type, { isInsert }) => {
   const errors = {}
 
   for (let key in update) {
-    const value = update[key]
+    let value = update[key]
+
+    // type coercion
+    const property = type.properties.find(p => p.name === key)
+    if (property.type === 'integer') {
+      value = parseInt(value, 10)
+    }
 
     // FIXME: authorization!
     addValidations(type, key, value, errors)
