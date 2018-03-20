@@ -33,7 +33,6 @@ const init = async () => {
   for (let key in types) {
     await updateSchemaForTable(pool, types[key])
   }
-//  getSchemaForTable(pool, 'users')
 
   app.use(async ctx => {
     if (ctx.request.href.indexOf('data') !== -1) {

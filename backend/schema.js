@@ -3,13 +3,18 @@ const { pgTypes } = require('./db')
 
 const getSchemaForTable = async (pool, table) => {
   const res = await pool.query(`SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name='${table}'`)
-  //console.log(res.rows)
   return res.rows
 }
 
 const updateSchemaForTable = async (pool, type) => {
   console.log('Maybe updating ', type.table)
   const schema = await getSchemaForTable(pool, type.table)
+
+  if (schema.length === 0) {
+    console.error(`! Table ${type.table} does not exist, creating`)
+    const sql = `CREATE TABLE ${type.table} ()`
+    const result = await pool.query(sql)
+  }
   //console.log(schema)
   // TODO: remove unused columns if configured to do so!
 

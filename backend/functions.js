@@ -41,8 +41,6 @@ const loginUser = async (pool, currentUser, user, response) => {
       'X-token': newToken
     }
 
-    response.body = {status: 'OK'}
-
     return {
       update: {
         token: newToken
