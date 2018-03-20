@@ -75,10 +75,10 @@ const getTimestamps = (columns, values, { isInsert }) => {
   const pgTs = `${parts[0]} ${(parts[1].split('.'))[0]}`
 
   if (isInsert) {
-    values.push(`'${pgTs}'`)
+    values.push(`${pgTs}`)
   }
 
-  values.push(`'${pgTs}'`)
+  values.push(`${pgTs}`)
 }
 
 const patterns = {
@@ -130,13 +130,8 @@ const mapUpdate = (update, type, { isInsert }) => {
     addValidations(type, key, value, errors)
 
     columns.push(key)
-    let val
-    if (typeof value !== 'number') {
-      val = `'${value}'`
-    } else {
-      val = value
-    }
-    values.push(val)
+
+    values.push(value)
   }
 
   getTimestamps(columns, values, { isInsert })

@@ -112,9 +112,9 @@ const runFunctions = async (context, type) => {
   }
 }
 
-const runMutationQuery = async (pool, sql, query) => {
-  console.log(sql)
-  const data = await pool.query(sql)
+const runMutationQuery = async (pool, text, values, query) => {
+  console.log(text, values)
+  const data = await pool.query(text, values)
   if (data.rowCount !== 1) {
     throw new Error(`Failed to update ${query.action}`)
   }
@@ -138,12 +138,12 @@ const handleUpdate = async (context) => {
     const { columns, values } = mapUpdate(request.update, type, { isInsert: false })
 
     const set = columns.map((val, idx) => {
-      return `${val}=${values[idx]}`
+      return `${val}=$${idx+2}`
     })
 
-    const sql = `UPDATE ${type.table} SET ${set.join(', ')} WHERE id=${request.id}`
+    const text = `UPDATE ${type.table} SET ${set.join(', ')} WHERE id=$1`
 
-    await runMutationQuery(context.pool, sql, request)
+    await runMutationQuery(context.pool, text, [request.id].concat(values), request)
 
     await handleRead({
       ...context,
@@ -175,9 +175,9 @@ const handleDelete = async (context) => {
       throw new Error(`Cannot delete if no ID specified`)
     }
 
-    const sql = `DELETE FROM ${type.table} WHERE id=${request.id}`
+    const text = `DELETE FROM ${type.table} WHERE id=$1`
 
-    await runMutationQuery(context.pool, sql, request)
+    await runMutationQuery(context.pool, text, [request.id], request)
 
     await handleRead({
       ...context,
@@ -195,7 +195,6 @@ const handleDelete = async (context) => {
 }
 
 const handleCreate = async (context) => {
-  // TODO: validation
   // TODO: nested inserts
   const request = context.request
   const response = context.response
@@ -214,9 +213,10 @@ const handleCreate = async (context) => {
       values.push(context.user.id)
     }
 
-    const sql = `INSERT INTO ${type.table} (${columns.join(', ')}) VALUES (${values.join(', ')})`
+    const vars = values.map((v, i) => `$${i+1}`)
+    const text = `INSERT INTO ${type.table} (${columns.join(', ')}) VALUES (${vars.join(', ')})`
 
-    await runMutationQuery(context.pool, sql, request)
+    await runMutationQuery(context.pool, text, values, request)
 
     await handleRead({
       ...context,

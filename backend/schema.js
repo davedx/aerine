@@ -14,7 +14,7 @@ const updateSchemaForTable = async (pool, type) => {
   }
 
   const schema = await getSchemaForTable(pool, type.table)
-console.log(schema);
+
   if (schema.length === 0) {
     console.error(`! Table ${type.table} does not exist, creating`)
     const sql = `CREATE TABLE ${type.table} (inserted_at timestamp without time zone, updated_at timestamp without time zone)`

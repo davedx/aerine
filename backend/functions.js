@@ -18,15 +18,11 @@ const createUser = async (pool, currentUser, user, response) => {
   }
 }
 
-const addFriend = async (pool, currentUser, request, response) => {
-  console.log('addFriend...', request)
-}
-
 const loginUser = async (pool, currentUser, user, response) => {
   const { email, password } = user
   console.log(`Authenticating user: ${user.email}`)
 
-  const data = await pool.query(`SELECT id, password FROM users WHERE email='${email}'`)
+  const data = await pool.query('SELECT id, password FROM users WHERE email=$1', [email])
   const foundUser = data.rows[0]
   if (!foundUser) {
     throw {email: ['Invalid user.']}
@@ -59,7 +55,7 @@ const logoutUser = async (pool, currentUser, user, response) => {
     response.body = {status: 'OK'}
     return
   }
-  const result = await pool.query(`UPDATE users SET token='' WHERE id=${currentUser.id}`)
+  const result = await pool.query("UPDATE users SET token=$1 WHERE id=$2", ['', currentUser.id])
   response.headers = {
     'X-token': ''
   }
@@ -67,4 +63,4 @@ const logoutUser = async (pool, currentUser, user, response) => {
   return
 }
 
-module.exports = { createUser, loginUser, logoutUser, addFriend }
+module.exports = { createUser, loginUser, logoutUser }
