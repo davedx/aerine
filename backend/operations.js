@@ -1,3 +1,5 @@
+const xss = require("xss")
+
 const {
   buildQuery,
   accumulateTuple,
@@ -112,7 +114,10 @@ const runFunctions = async (context, type) => {
 
 const runMutationQuery = async (pool, text, values, query) => {
   console.log(text, values)
-  const data = await pool.query(text, values)
+
+  const saferValues = values.map(val => xss(val))
+
+  const data = await pool.query(text, saferValues)
   if (data.rowCount !== 1) {
     throw new Error(`Failed to update ${query.action}`)
   }
