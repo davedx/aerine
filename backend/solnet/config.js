@@ -31,6 +31,7 @@ const types = {
   },
   friend: {
     //recreate: true,
+    //dumpData: true,
     table: 'friends',
     properties: [
       { name: 'user_id', type: 'integer' },

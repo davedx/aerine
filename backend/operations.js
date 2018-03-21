@@ -58,12 +58,10 @@ const handleRead = async (context) => {
 
     //console.log('tuples: ', tuples)
 
-    const sql = buildQuery(context.types, context.user, tuples)
-    console.log('sql: ', sql)
-
-    //const sql = `SELECT * FROM ${types[type].table} ${filter}`
-
     try {
+      const sql = buildQuery(context.types, context.user, tuples, owner)
+      console.log('sql: ', sql)
+
       const data = await context.pool.query(sql)
       console.log(data.rows)
       response.body[key] = data.rows.map(row => {

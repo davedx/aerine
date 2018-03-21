@@ -21,7 +21,7 @@ const buildFilter = (filters) => {
   return ` WHERE ${filters.join(' AND ')}`
 }
 
-const buildQuery = (types, currentUser, tuples) => {
+const buildQuery = (types, currentUser, tuples, dataOwner) => {
   let sql = 'SELECT'
   let tables = []
   let columns = []
@@ -35,7 +35,14 @@ const buildQuery = (types, currentUser, tuples) => {
   }
 
   const filters = []
-  if (currentUser && tuples[0].type !== 'user') {
+  if (dataOwner) {
+    if (dataOwner === 'currentUser') {
+      const id = currentUser.id
+      filters.push(`${tables[0][0]}.user_id=${id}`)
+    } else {
+      throw new Error(`Invalid parameter for owner: ${dataOwner}`)
+    }
+  } else if (currentUser && tuples[0].type !== 'user') {
     filters.push(`${tables[0][0]}.user_id=${currentUser.id}`)
   }
 

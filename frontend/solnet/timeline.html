@@ -1,4 +1,4 @@
-<template id='Timeline' data='{"posts": {"type": "post", "owner": "authed"}, "users": {"type": "user"}}'>
+<template id='Timeline' data='{"posts": {"type": "post", "owner": "currentUser"}, "users": {"type": "user"}, "friends": {"type": "friend", "owner": "currentUser"}}'>
   <div class='user-control'>
     <div class='status'>Logged in as {{ currentUser.email }}</div>
     <div class='action'>
@@ -7,19 +7,26 @@
   <div>
     <h1>Timeline</h1>
 
-    <ul>
+    <ul class='timeline-section timeline-posts'>
       <li t-for="post in posts">
         {{ post.body }} by {{ post.user.first_name }} {{ post.user.surname }}
         <button action='post' method='delete' class='button'>Delete post</button>
       </li>
     </ul>
 
-    <ul>
+    <ul class='timeline-section timeline-friends'>
+      <li t-for="friend in friends">
+        {{ friend.user.email }}
+        <button action='friend' method='delete' class='button button-small'>Remove friend</button>
+      </li>
+    </ul>
+
+    <ul class='timeline-section timeline-users'>
       <li t-for="user in users">
         {{ user.email }}
         <form action='friend' method='create'>
           <input type='hidden' name='friend_id' value='{{ user.id }}'>
-          <button type='submit' class='button'>Add friend</button>
+          <button type='submit' class='button button-small'>Add friend</button>
         </form>
       </li>
     </ul>
@@ -31,6 +38,19 @@
     </form>
   </div>
 </template>
+<style>
+.timeline-section {
+  width: 33%;
+  display: inline-block;
+  vertical-align: top;
+}
+.timeline-section li {
+  margin: 10px 0;
+}
+.timeline-users {
+  font-size: 12px;
+}
+</style>
 <script>
 // High level TODOs
 // - Friends of current user
