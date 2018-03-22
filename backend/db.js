@@ -37,6 +37,9 @@ const buildQuery = (types, currentUser, tuples, dataOwner) => {
   const filters = []
   if (dataOwner) {
     if (dataOwner === 'currentUser') {
+      if (!currentUser) {
+        throw new Error(`Not logged in, so cannot authorize`)
+      }
       const id = currentUser.id
       filters.push(`${tables[0][0]}.user_id=${id}`)
     } else {

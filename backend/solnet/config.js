@@ -14,7 +14,7 @@ const types = {
       { name: 'first_name', type: 'string', minLen: 2 },
       { name: 'surname', type: 'string', minLen: 2 },
       { name: 'email', type: 'string', pattern: 'email' },
-      { name: 'token', type: 'string', read: false },
+      { name: 'token', type: 'string', read: false }, // FIXME: should this really be opt-out? hmmm, Rails, hmmmm?
       { name: 'password', type: 'string', read: false },
       { name: 'bio', type: 'string' },
       { name: 'location', type: 'string' }

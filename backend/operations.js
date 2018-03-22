@@ -19,28 +19,13 @@ const getAuthenticatedUser = async (pool, token) => {
   }
 }
 
-/* example:
-request:  { posts: { type: 'post', owner: 'currentUser' },
-  users: { type: 'user' },
-  friends: { type: 'friend', owner: 'currentUser' },
-  __references: 
-   [ 'posts.post.body',
-     'posts.post.user.first_name',
-     'posts.post.user.surname',
-     'friends.friend.user.email',
-     'users.user.email',
-     'users.user.id' ] }
-*/
 const addAllReadableProperties = (request, types) => {
   const refs = []
   for (let alias in request) {
-    console.log('checking '+alias)
-
     const type = types[request[alias].type]
     
     for (let i = 0; i < type.properties.length; i++) {
       const prop = type.properties[i]
-      console.log('maybe adding '+prop.name)
       if (prop.read !== false) {
         refs.push(`${alias}.${request[alias].type}.${prop.name}`)
       }
@@ -55,8 +40,8 @@ const handleRead = async (context) => {
   // this behaviour should be controlled and definable in user types
   const request = context.request
   const response = context.response
-  if (!request) {// || !request.__references) {
-    return
+  if (!request) {
+    return // TODO: error
   }
 
   if (!request.__references) {
@@ -118,6 +103,7 @@ const handleRead = async (context) => {
         return newRow
       })
     } catch (e) {
+      console.error('Error: ', e)
       response.body[key] = {
         error: e.message || e
       }
