@@ -26,6 +26,49 @@ app.use(bodyParser({enableTypes: ['text', 'json']}))
 
 const { types } = require('./solnet/config')
 
+const httpMap = {
+  'get': 'read',
+  'post': 'create',
+  'put': 'update',
+  'delete': 'delete'
+}
+
+const mapHttpMethod = (method) => {
+  if (!httpMap[method]) {
+    console.error(`Unsupported method: ${method}`)
+    return ''
+  } else {
+    return httpMap[method]
+  }
+}
+
+const singularize = (plural) => {
+  if (_.last(plural) === 's') {
+    return plural.slice(0, plural.length-1)
+  }
+  return plural
+}
+
+const mapUri = (uri) => {
+  // TODO: use proper functions to refactor this horrible hacky function
+  const lastPart = _.last(uri.split('/'))
+  let action, params = {}
+  if (lastPart.indexOf('?') !== -1) {
+    const last = lastPart.split('?')
+    action = _.first(last)
+    const pairs = _.last(last).split('=')
+    params[pairs[0]] = pairs[1]
+  } else {
+    action = lastPart
+  }
+  return [action, {
+    [action]: {
+      type: singularize(action),
+      ...params
+    }
+  }]
+}
+
 const init = async () => {
   const pool = connectDb()
 
@@ -36,7 +79,7 @@ const init = async () => {
 
   app.use(async ctx => {
     if (ctx.request.href.indexOf('data') !== -1) {
-      const request = ctx.request.body
+      let request
       let user
 
       if (ctx.request.headers['x-token']) {
@@ -51,11 +94,35 @@ const init = async () => {
         response.body.currentUser = user
       }
 
-      console.log('request: ', request)
+      let method
+
+      // process uris
+      const uri = _.last(ctx.request.href.split('data', 2))
+      if (uri) {
+        method = mapHttpMethod(ctx.request.method.toLowerCase())
+        if (!method) {
+          ctx.status = 400
+          ctx.body = `Unsupported method. Only HTTP methods are allowed`
+          return
+        }
+        let res = mapUri(uri)
+        //console.log(res)
+        request = res[1]
+        //console.log(`REST request: ${method}`, request)
+        // TODO: support nested resources
+        // e.g. /posts/users -> return posts with users
+      } else {
+        request = ctx.request.body
+        method = request.method || 'read'
+      }
+
+      console.log(`uri: ${uri}`)
+
+      console.log(`Request: ${method}`, request)
       let status
 
-      if (request.action && request.method) {
-        switch (request.method) {
+      if (method) {
+        switch (method) {
           case 'create':
             status = await handleCreate({ pool, types, user, request, response })
             break
@@ -65,12 +132,13 @@ const init = async () => {
           case 'update':
             status = await handleUpdate({ pool, types, user, request, response })
             break
+          case 'read':
+            status = await handleRead({ pool, types, user, request, response })
+            break
           default:
             status = await handleCustomMethod({ pool, types, user, request, response })
             break
         }
-      } else {
-        status = await handleRead({ pool, types, user, request, response })
       }
 
       if (response.headers) {
@@ -96,7 +164,7 @@ const init = async () => {
         const key = _.first(filename.split('.'))
         file = file.replace(`const _STARTUP_ = ''`, `const _STARTUP_ = '${key}'`)
       }
-      // TODO: stream it somehow
+      // TODO: stream it
       ctx.set('Content-type', 'text/html')
       ctx.body = file
     }

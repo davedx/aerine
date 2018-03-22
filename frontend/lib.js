@@ -2,7 +2,7 @@
 
 // TODO: make this REST compatible: __references an extension of a standard REST query of the root object type
 // this way we can have mobile and other clients... (not like Meteor)
-async function http(body, { contentType, method }) {
+async function http(body, { contentType, method, uri }) {
   const token = sessionStorage.getItem('token')
   const headers = {
     'Content-Type': contentType || 'text/plain'
@@ -13,12 +13,16 @@ async function http(body, { contentType, method }) {
 
   let status
 
-  return await fetch('/data', {
-    body: JSON.stringify(body),
+  let path = '/data' + (uri ? uri : '')
+  let options = {
     headers: new Headers(headers),
     method: method || 'POST'
-  }).then(response => {
+  }
+  if (method !== 'get' && body) {
+    options.body = JSON.stringify(body)
+  }
 
+  return await fetch(path, options).then(response => {
     status = response.status
     if (response.headers.has('x-token')) {
       const token = response.headers.get('x-token')
@@ -57,7 +61,7 @@ async function create(config) {
   const template = config.template
   const queriesJson = template.getAttribute('data')
   const queries = JSON.parse(queriesJson)
-  //console.log('template queries: ', json)
+  console.log('template queries: ', queries)
 
   // find references
   let references = []
@@ -67,8 +71,24 @@ async function create(config) {
   let data = {}
   if (queries) {
     queries.__references = references
+    //console.log('refs: ', queries.__references)
     data = await http(queries, { contentType: 'application/json' })
     console.log('data: ', data)
+
+    // use new REST transport instead
+    /*
+    let query1 = queries[Object.keys(queries)[0]]
+    // TODO: pluralize
+    const action = query1.type + 's' // FIXME
+    let uri = `/${action}`
+    // TODO: if not users...
+    if (query1.owner) {
+      uri += `?owner=${query1.owner}`
+    }
+    console.log('q1: ', query1)
+    data = await http({}, { contentType: 'application/json', method: 'get', uri: uri })
+    console.log('data: ', data)
+    */
   }
 
   // put it in the dom

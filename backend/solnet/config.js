@@ -1,6 +1,3 @@
-
-// TODO: tool to auto-build from DB schema?
-// but this is user config, like schema.rb
 // TODO: should just be a JSON file so it's easy to share between front end and back end
 const types = {
   post: {
@@ -17,16 +14,15 @@ const types = {
       { name: 'first_name', type: 'string', minLen: 2 },
       { name: 'surname', type: 'string', minLen: 2 },
       { name: 'email', type: 'string', pattern: 'email' },
-      { name: 'token', type: 'string' },
-      { name: 'password', type: 'string' },
+      { name: 'token', type: 'string', read: false },
+      { name: 'password', type: 'string', read: false },
       { name: 'bio', type: 'string' },
       { name: 'location', type: 'string' }
     ],
     functions: {
       update: 'loginUser',
       create: 'createUser',
-      delete: 'logoutUser',
-      add_friend: 'addFriend'
+      delete: 'logoutUser'
     }
   },
   friend: {

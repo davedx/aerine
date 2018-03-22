@@ -19,13 +19,48 @@ const getAuthenticatedUser = async (pool, token) => {
   }
 }
 
+/* example:
+request:  { posts: { type: 'post', owner: 'currentUser' },
+  users: { type: 'user' },
+  friends: { type: 'friend', owner: 'currentUser' },
+  __references: 
+   [ 'posts.post.body',
+     'posts.post.user.first_name',
+     'posts.post.user.surname',
+     'friends.friend.user.email',
+     'users.user.email',
+     'users.user.id' ] }
+*/
+const addAllReadableProperties = (request, types) => {
+  const refs = []
+  for (let alias in request) {
+    console.log('checking '+alias)
+
+    const type = types[request[alias].type]
+    
+    for (let i = 0; i < type.properties.length; i++) {
+      const prop = type.properties[i]
+      console.log('maybe adding '+prop.name)
+      if (prop.read !== false) {
+        refs.push(`${alias}.${request[alias].type}.${prop.name}`)
+      }
+    }
+  }
+  console.log('refs: ', refs)
+  return refs
+}
+
 const handleRead = async (context) => {
   // FIXME: currently if no user, selects EVERYTHING
   // this behaviour should be controlled and definable in user types
   const request = context.request
   const response = context.response
-  if (!request || !request.__references) {
+  if (!request) {// || !request.__references) {
     return
+  }
+
+  if (!request.__references) {
+    request.__references = addAllReadableProperties(request, context.types)
   }
 
   const refs = (request.__references || []).map(e => e.split('.'))
@@ -40,7 +75,7 @@ const handleRead = async (context) => {
     //console.log('key: ', key, ' type: ', type, types[type])
 
     const refsForType = refs.filter(refList => refList[0] === key)
-    //console.log('refsForType: ', refsForType)
+    console.log('refsForType: ', refsForType)
 
     let tuples = []
 
